@@ -547,7 +547,7 @@
 
       <section class="card" style="margin-bottom:0">
         <h2><span class="num">◆</span> Desarrollo</h2>
-        <div style="font-size:11px;color:var(--faint);margin-bottom:6px;line-height:1.4">Valores estimados según el tamaño del proyecto. Edita el que quieras; deja en 0 para volver al estimado.</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:6px;line-height:1.4">Cada rubro usa su valor estimado según el tamaño del proyecto (en verde). Escribe una cifra para ajustarlo, o quítalo con × si no aplica.</div>
         <div id="listaDesarrollo"></div>
         <div style="margin-top:8px">
           <select id="selAgregarDesarrollo" onchange="agregarDesarrolloDeLista(this.value)" style="max-width:220px"></select>
@@ -733,6 +733,114 @@
         </div>
       </section>
 
+      <section class="card" id="isrCard" style="grid-column:1/-1;margin-bottom:0">
+        <h2><span class="num">◆</span> Impuestos <span style="font-weight:400;font-size:12.5px;color:var(--faint)">· panel para la contadora</span></h2>
+        <div style="font-size:11px;color:var(--faint);line-height:1.5;margin-bottom:10px;max-width:820px">Este panel estima los impuestos del proyecto. Los valores vienen sugeridos según la ley hondureña vigente; la contadora los ajusta y puede <b>agregar o quitar</b> deducibles e impuestos. Es un <b>estimado realista</b>, no una declaración jurada.</div>
+
+        <!-- CÓMO SE CALCULA: de dónde sale y a dónde va el dinero (para quien no maneja el tema) -->
+        <details open style="margin-bottom:14px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface-2)">
+          <summary style="cursor:pointer;padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--ink)">Cómo se calcula · de dónde sale y a dónde va el dinero</summary>
+          <div style="padding:2px 14px 13px">
+            <div style="font-size:11px;color:var(--muted);line-height:1.7">
+              <div style="display:flex;gap:8px;align-items:baseline"><span style="color:var(--teal);font-weight:700;font-family:var(--mono)">1</span><span><b>Ingresos del año</b> (las ventas de lotes que entran ese año: primas + cuotas).</span></div>
+              <div style="display:flex;gap:8px;align-items:baseline"><span style="color:var(--clay);font-weight:700;font-family:var(--mono)">2</span><span><b>− Costos ya cargados</b> en los otros módulos: pago del terreno, desarrollo, salarios y cargas, comisiones, gastos operativos. &nbsp;=&nbsp; <b>Ganancia del año</b> (antes de impuestos).</span></div>
+              <div style="display:flex;gap:8px;align-items:baseline"><span style="color:var(--clay);font-weight:700;font-family:var(--mono)">3</span><span><b>− Deducibles</b> que agregues aquí (donaciones, exentos…). &nbsp;=&nbsp; <b>Base gravable</b>.</span></div>
+              <div style="display:flex;gap:8px;align-items:baseline"><span style="color:#34495E;font-weight:700;font-family:var(--mono)">4</span><span>Sobre esa base: <b>ISR + solidaria</b> (o el 1% de activo neto, el que sea mayor) <b>+ impuestos adicionales</b>. &nbsp;→&nbsp; se pagan al fisco: <b style="color:#34495E">SALEN de la caja</b>.</span></div>
+              <div style="display:flex;gap:8px;align-items:baseline"><span style="color:var(--teal);font-weight:700;font-family:var(--mono)">5</span><span>Lo que queda <b>→ se reparte</b>: reserva de reinversión + ganancia a socios.</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:11px">
+              <div style="flex:1;min-width:230px;background:var(--surface);border:1px solid #BFE0D7;border-radius:8px;padding:8px 11px">
+                <div style="font-size:10.5px;font-weight:700;color:var(--teal);margin-bottom:3px">✓ SÍ toma en cuenta</div>
+                <div style="font-size:10.5px;color:var(--muted);line-height:1.5">Ingresos del año · costo del terreno · desarrollo · salarios y cargas · comisiones · gastos operativos · los deducibles e impuestos que agregues aquí.</div>
+              </div>
+              <div style="flex:1;min-width:230px;background:var(--surface);border:1px solid #E3C3AE;border-radius:8px;padding:8px 11px">
+                <div style="font-size:10.5px;font-weight:700;color:var(--clay);margin-bottom:3px">✗ NO toma en cuenta <span style="font-weight:400;color:var(--faint)">(lo afina la contadora en la declaración real)</span></div>
+                <div style="font-size:10.5px;color:var(--muted);line-height:1.5">Depreciación de activos · el calce exacto del costo del terreno lote por lote · intereses de préstamos bancarios · anticipos/pagos a cuenta trimestrales · retenciones.</div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="grid2" style="gap:14px;align-items:start">
+          <!-- IZQUIERDA: ISR + solidaria + base gravable + activo neto -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="border:1px solid var(--line-2);border-radius:10px;padding:11px 13px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;margin-bottom:5px">
+                <input type="checkbox" id="isrOn" checked onchange="calcCostos()" style="width:auto;margin:0;flex-shrink:0">
+                <span>Impuesto sobre la Renta (ISR) de sociedades</span>
+              </label>
+              <div style="font-size:10.5px;color:var(--faint);line-height:1.45;margin-bottom:8px">25% sobre la renta neta gravable + 5% de <b>aportación solidaria</b> sobre lo que pasa de L1,000,000 al año. Venta habitual de lotes = renta ordinaria (no ganancia de capital).</div>
+              <div id="isrRates">
+                <div class="field" style="border:none;padding:3px 0">
+                  <label style="font-size:12px">ISR <span class="hint">tasa de sociedades</span></label>
+                  <div class="ctrl"><input type="number" id="isrPct" value="25" step="0.5" oninput="calcCostos()" style="max-width:60px"><span class="unit">%</span></div>
+                </div>
+                <div class="field" style="border:none;padding:3px 0">
+                  <label style="font-size:12px">Aportación solidaria <span class="hint">sobre el excedente</span></label>
+                  <div class="ctrl"><input type="number" id="isrSolPct" value="5" step="0.5" oninput="calcCostos()" style="max-width:60px"><span class="unit">%</span></div>
+                </div>
+                <div class="field" style="border:none;padding:3px 0">
+                  <label style="font-size:12px">Umbral de la solidaria <span class="hint">ganancia anual sobre esto</span></label>
+                  <div class="ctrl"><input type="number" id="isrUmbral" value="1000000" step="50000" oninput="calcCostos()" style="max-width:105px"><span class="unit">L</span></div>
+                </div>
+                <div style="border:none;padding:6px 0 2px;border-top:1px solid var(--line-2);margin-top:4px">
+                  <label style="font-size:12px;display:block;margin-bottom:5px">Base gravable <span class="hint">qué parte de la ganancia se grava</span></label>
+                  <span style="display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;background:var(--surface-2)">
+                    <button type="button" id="bmUtil" onclick="setBaseMode('utilidad')" style="flex:0 0 auto;white-space:nowrap;padding:5px 11px;font-size:10.5px;border:none;border-radius:7px;cursor:pointer;background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.1)">Toda la utilidad</button>
+                    <button type="button" id="bmRep" onclick="setBaseMode('repartido')" style="flex:0 0 auto;white-space:nowrap;padding:5px 11px;font-size:10.5px;border:none;border-radius:7px;cursor:pointer;background:transparent;color:var(--faint);font-weight:500">Solo lo repartido</button>
+                  </span>
+                  <div style="font-size:9.5px;color:var(--faint);margin-top:3px;line-height:1.4">«Toda la utilidad» grava también lo que reinviertes (como pide la ley). «Solo lo repartido» no grava la reserva de reinversión (más optimista).</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="border:1px solid var(--line-2);border-radius:10px;padding:11px 13px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;margin-bottom:5px">
+                <input type="checkbox" id="ianOn" onchange="calcCostos()" style="width:auto;margin:0;flex-shrink:0">
+                <span>Impuesto al Activo Neto (1%)</span>
+              </label>
+              <div style="font-size:10.5px;color:var(--faint);line-height:1.45;margin-bottom:8px">Es un <b>mínimo alternativo</b>: cada año se paga el <b>mayor</b> entre el ISR y este 1% del activo neto. Normalmente solo pesa en años de poca o nula ganancia.</div>
+              <div id="ianRates" style="display:none">
+                <div class="field" style="border:none;padding:3px 0">
+                  <label style="font-size:12px">Tasa <span class="hint">del activo neto</span></label>
+                  <div class="ctrl"><input type="number" id="ianPct" value="1" step="0.25" oninput="calcCostos()" style="max-width:60px"><span class="unit">%</span></div>
+                </div>
+                <div class="field" style="border:none;padding:3px 0">
+                  <label style="font-size:12px">Activo neto <span class="hint" id="ianBaseHint">valor de activos − pasivos</span></label>
+                  <div class="ctrl"><input type="number" id="ianBase" value="0" step="100000" oninput="calcCostos()" style="max-width:130px"><span class="unit">L</span></div>
+                </div>
+                <button class="btn sm" style="margin-top:2px" onclick="aceptarIanBase()">Usar sugerido (capital + terreno + desarrollo)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DERECHA: deducibles + impuestos adicionales (listas dinámicas) -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="border:1px solid var(--line-2);border-radius:10px;padding:11px 13px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:3px">Deducibles <span style="font-weight:400;font-size:11px;color:var(--faint)">— bajan la base gravable</span></div>
+              <div style="font-size:10.5px;color:var(--faint);line-height:1.45;margin-bottom:8px">Montos que la ley te deja restar de la renta antes del impuesto: donaciones deducibles, ingresos exentos, incentivos. <b>Reducen el impuesto, no salen de caja aquí</b> (un gasto real va en «Gastos operativos»).</div>
+              <div id="listaDeducibles"></div>
+              <button class="btn sm" style="margin-top:8px" onclick="addDeducible()">+ Agregar deducible</button>
+            </div>
+
+            <div style="border:1px solid var(--line-2);border-radius:10px;padding:11px 13px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:3px">Impuestos adicionales <span style="font-weight:400;font-size:11px;color:var(--faint)">— además del ISR</span></div>
+              <div style="font-size:10.5px;color:var(--faint);line-height:1.45;margin-bottom:8px">Otros impuestos o tasas que sí paguen: cada uno es un <b>%</b> sobre la base que elijas (las ventas del año, la ganancia gravable o el activo). Salen de la caja como el ISR.</div>
+              <div id="listaImpAdic"></div>
+              <button class="btn sm" style="margin-top:8px" onclick="addImpuestoAdic()">+ Agregar impuesto</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;background:var(--surface-2);border-radius:9px;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">
+            <span style="font-size:12.5px;font-weight:700">Impuestos estimados <span style="color:var(--faint);font-weight:400">· todo el proyecto</span></span>
+            <span class="val" style="font-size:15px;color:var(--clay);font-weight:700;font-family:var(--mono)" id="rIsrTotal">—</span>
+          </div>
+          <div id="rImpDesglose" style="font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.5"></div>
+        </div>
+      </section>
+
       <section class="card" style="grid-column:1/-1;margin-bottom:0">
         <h2><span class="num">✓</span> Verificación del módulo</h2>
         <div class="check" id="verifCostos"></div>
@@ -776,7 +884,7 @@
         <h2><span class="num">=</span> Reparto de la utilidad</h2>
         <div class="field" style="border:none;padding:4px 0;max-width:340px">
           <label style="font-size:12.5px">Ahorro a capital <span class="hint">% de la ganancia que se aparta antes de repartir a los socios</span></label>
-          <div class="ctrl"><input type="number" id="proyAhorro" value="0" oninput="calcProyeccion()" style="max-width:60px"><span class="unit">%</span></div>
+          <div class="ctrl"><input type="number" id="proyAhorro" value="0" min="0" max="100" oninput="calcProyeccion()" style="max-width:60px"><span class="unit">%</span></div>
         </div>
         <div id="proyReparto"></div>
       </section>
@@ -1351,6 +1459,10 @@ function calcTerreno(){
     if(pagoDuenoMode==='contado' && costo>capital){
       avisos.push(`Elegiste pago <strong>de contado</strong>, pero el terreno cuesta ${L(costo)} y solo hay ${L(capital)} de capital. Considera pagar con enganche y cuotas.`);
     }
+    if(pagoDuenoMode==='contado' && saldoDueno>0){
+      const _operar = quedaTrabajar - saldoDueno;
+      avisos.push(`En <strong>contado</strong>, el mes 1 sale el saldo de <strong>${L(saldoDueno)}</strong> al dueño: de los ${L(quedaTrabajar)} que ves como "queda para trabajar", en realidad quedan <strong>${L(_operar)}</strong> para operar${_operar<0?` — <strong>faltarían ${L(-_operar)}</strong>`:''}.`);
+    }
     if(enganche>costo){
       avisos.push(`El enganche (${L(enganche)}) es mayor que el costo del terreno (${L(costo)}). Revisa el monto.`);
     }
@@ -1472,15 +1584,18 @@ function estimarBaseDesarrollo(){
   const ml = metrosCalle();
   return Math.round(areaCallesM2*REF.calles + ml*REF.aguaML + ml*REF.electML + ml*REF.drenajeML);
 }
-function delDesarrollo(i){ desarrollo.splice(i,1); renderDesarrollo(); calcLotes(); }
+// al cambiar el desarrollo, si "Proyecto en marcha" está activo hay que recalcular también el PRECIO
+// de compra (suma "lo ya desarrollado"), no solo los lotes. calcTerreno recompone precio y luego cascada.
+function recalcDesa(){ if(window.PM_on && typeof calcTerreno==='function') calcTerreno(); else calcLotes(); }
+function delDesarrollo(i){ desarrollo.splice(i,1); renderDesarrollo(); recalcDesa(); }
 function onDesarrolloMonto(i,val){
   desarrollo[i].monto=parseFloat(val)||0;
-  calcLotes();
+  recalcDesa();
 }
 // copia la cifra recomendada a la casilla de ese rubro (nada más)
 function copiarRec(i){
   desarrollo[i].monto = estimarDesarrollo(desarrollo[i].tipo);
-  renderDesarrollo(); calcLotes();
+  renderDesarrollo(); recalcDesa();
 }
 // agregar rubro desde la lista fija: un rubro recomendado o uno personalizado
 function agregarDesarrolloDeLista(val){
@@ -1492,7 +1607,7 @@ function agregarDesarrolloDeLista(val){
     const def=DESARROLLO_TIPICOS.find(t=>t.tipo===tipo);
     if(def) desarrollo.push({nombre:def.nombre, tipo:def.tipo, monto:0});
   }
-  renderDesarrollo(); calcLotes();
+  renderDesarrollo(); recalcDesa();
 }
 // el selector solo ofrece los rubros recomendados que aún NO están en la lista, más "otro"
 function renderSelectorDesarrollo(){
@@ -1503,6 +1618,8 @@ function renderSelectorDesarrollo(){
   opts+=`<option value="otro">Otro concepto…</option>`;
   sel.innerHTML=opts;
 }
+// valor efectivo de un rubro de desarrollo: si lo dejas en 0, usa su estimado (los personalizados sin estimado quedan en 0)
+function desaEfectivo(d){ return (d && d.monto>0) ? d.monto : ((d && d.tipo && d.tipo!=='otro') ? estimarDesarrollo(d.tipo) : 0); }
 function renderDesarrollo(){
   const c=$("listaDesarrollo"); if(!c) return;
   initDesarrollo();
@@ -1522,7 +1639,7 @@ function renderDesarrollo(){
       ${nombreHTML}
       <input type="number" value="${d.monto||0}" oninput="onDesarrolloMonto(${i},this.value)" style="max-width:110px">
       <span class="unit">L</span>
-      ${btnRec}
+      ${d.monto>0 ? btnRec : (est>0?`<span style="font-size:10px;color:var(--teal);white-space:nowrap" title="Lo dejaste en 0, así que se usa el estimado. Escribe una cifra para cambiarlo.">usa estimado L ${est.toLocaleString('es-HN')}</span>`:'')}
       <button class="rowdel" onclick="delDesarrollo(${i})" title="Quitar">×</button>
     </div>`;}).join("");
   renderSelectorDesarrollo();
@@ -1588,7 +1705,7 @@ function calcLotes(){
 
   // desarrollo: el total es la suma de lo que hay en cada casilla (valores manuales del usuario)
   initDesarrollo();
-  const desarrolloTotal = desarrollo.reduce((a,d)=>a+(d.monto||0),0);
+  const desarrolloTotal = desarrollo.reduce((a,d)=>a+desaEfectivo(d),0);
   // refrescar la lista para que los botones de cifra recomendada reflejen el terreno actual,
   // salvo cuando el usuario está escribiendo en una casilla (para no quitarle el foco)
   const focoEnDesarrollo = document.activeElement && document.activeElement.closest && document.activeElement.closest("#listaDesarrollo");
@@ -1630,6 +1747,7 @@ function calcLotes(){
 
   // alertas: solo cuando algo no cuadra
   let avisos=[];
+  let infos=[];   // avisos informativos (no son errores): guían sin forzar valores
   if(terrTotal===0){
     avisos.push(`Aún no hay terreno definido. Ingresa el tamaño en el módulo <strong>Compra del terreno</strong>.`);
   }else{
@@ -1639,10 +1757,17 @@ function calcLotes(){
     if(lotTam>0 && vendible>0 && lotTam>vendible){
       avisos.push(`Cada lote (${NV2(lotTam)}) es más grande que toda el área vendible (${NV2(vendible)}). No cabe ningún lote.`);
     }
+    // calles/verde en 0: la proyección tomaría TODO el terreno como vendible. No se fuerza un valor; solo se avisa.
+    if(callesPct===0 && verdePct===0){
+      infos.push(`Ahora mismo se está tomando el <strong>100% del terreno como vendible</strong>: no has apartado área para <strong>calles</strong> ni <strong>zonas verdes</strong>. En una lotificación real las calles ocupan cerca del <strong>15–25%</strong> y muchas alcaldías <strong>exigen</strong> un porcentaje de área verde. Ajusta los dos campos de arriba y el número de lotes (y el ingreso) se recalculan solos; déjalos en 0 solo si de verdad no aplican.`);
+    } else {
+      if(callesPct===0) infos.push(`No apartaste área para <strong>calles</strong> (0%). Casi toda lotificación necesita vías de acceso (≈15–25% del terreno); en 0% se asume que no ocupan área vendible.`);
+      if(verdePct===0)  infos.push(`No apartaste <strong>área verde</strong> (0%). Muchos municipios exigen un porcentaje de zona verde; en 0% se asume que no ocupa área vendible.`);
+    }
   }
-  $("rLotAviso").innerHTML = avisos.length
-    ? avisos.map(a=>`<div class="note warn" style="margin-top:10px">⚠ ${a}</div>`).join("")
-    : "";
+  $("rLotAviso").innerHTML =
+    (avisos.length ? avisos.map(a=>`<div class="note warn" style="margin-top:10px">⚠ ${a}</div>`).join("") : "")
+    + (infos.length ? infos.map(a=>`<div class="note" style="margin-top:10px">ℹ️ ${a}</div>`).join("") : "");
 
   // verificación
   let v="";
@@ -2043,7 +2168,7 @@ let opexRubros=null;
 function initOpex(){ if(opexRubros===null) opexRubros=[
   {nombre:"Energía eléctrica",monto:0},{nombre:"Internet / teléfono",monto:0},
   {nombre:"Oficina / alquiler",monto:0},{nombre:"Mantenimiento",monto:0},
-  {nombre:"Publicidad",monto:0},{nombre:"Impuestos",monto:0}
+  {nombre:"Publicidad",monto:0},{nombre:"Trámites / papelería",monto:0}
 ]; }
 function renderOpex(){
   const c=$("listaOpex"); if(!c) return; initOpex();
@@ -2057,6 +2182,66 @@ function renderOpex(){
 }
 function addOpex(){ initOpex(); opexRubros.push({nombre:"",monto:0}); renderOpex(); calcCostos(); }
 function delOpex(i){ opexRubros.splice(i,1); renderOpex(); calcCostos(); }
+
+// ================= IMPUESTOS: panel dinámico que maneja la contadora =================
+let impBaseMode='utilidad';   // 'utilidad' = grava toda la ganancia (como la ley) · 'repartido' = no grava la reserva de reinversión
+let deducibles=[];            // [{nombre, tipo:'monto'|'pct', valor, base:'ganancia'|'ingresos'}] — reducen la base gravable
+let impuestosAdic=[];         // [{nombre, pct, base:'ingresos'|'ganancia'|'activo'}] — impuestos extra, salen de caja
+function setBaseMode(m){
+  impBaseMode=(m==='repartido')?'repartido':'utilidad';
+  const _stBm=(btn,on)=>{ if(!btn)return; btn.style.background=on?'var(--surface)':'transparent'; btn.style.color=on?'var(--ink)':'var(--faint)'; btn.style.fontWeight=on?'700':'500'; btn.style.boxShadow=on?'0 1px 2px rgba(0,0,0,.1)':'none'; };
+  _stBm($("bmUtil"), impBaseMode==='utilidad');
+  _stBm($("bmRep"),  impBaseMode==='repartido');
+  calcCostos();
+}
+function renderDeducibles(){
+  const c=$("listaDeducibles"); if(!c) return;
+  if(!deducibles.length){ c.innerHTML=`<div style="font-size:10.5px;color:var(--faint);font-style:italic">Sin deducibles. Ejemplo: una donación deducible o un ingreso exento de impuesto.</div>`; return; }
+  c.innerHTML = deducibles.map((d,i)=>{
+    const esPct=(d.tipo==='pct');
+    return `<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">
+      <input type="text" placeholder="Concepto (ej. donación)" value="${(d.nombre||'').replace(/"/g,'&quot;')}" oninput="deducibles[${i}].nombre=this.value;cloudSave()" style="flex:1;min-width:110px;text-align:left">
+      <select onchange="updDeducible(${i},'tipo',this.value)" style="font-size:11px;padding:3px">
+        <option value="monto" ${!esPct?'selected':''}>monto</option>
+        <option value="pct" ${esPct?'selected':''}>%</option>
+      </select>
+      <input type="number" value="${d.valor||0}" oninput="deducibles[${i}].valor=parseFloat(this.value)||0;calcCostos()" style="max-width:84px"><span class="unit">${esPct?'%':'L'}</span>
+      ${esPct?`<select onchange="updDeducible(${i},'base',this.value)" style="font-size:11px;padding:3px">
+        <option value="ganancia" ${d.base!=='ingresos'?'selected':''}>de la ganancia</option>
+        <option value="ingresos" ${d.base==='ingresos'?'selected':''}>de las ventas</option>
+      </select>`:''}
+      <button class="rowdel" onclick="delDeducible(${i})" title="Quitar">×</button>
+    </div>`;
+  }).join("");
+}
+function updDeducible(i,campo,valor){ if(!deducibles[i])return; deducibles[i][campo]=valor; renderDeducibles(); calcCostos(); }
+function addDeducible(){ deducibles.push({nombre:"",tipo:'monto',valor:0,base:'ganancia'}); renderDeducibles(); calcCostos(); }
+function delDeducible(i){ deducibles.splice(i,1); renderDeducibles(); calcCostos(); }
+function renderImpuestosAdic(){
+  const c=$("listaImpAdic"); if(!c) return;
+  if(!impuestosAdic.length){ c.innerHTML=`<div style="font-size:10.5px;color:var(--faint);font-style:italic">Sin impuestos adicionales. Ejemplo: una tasa municipal sobre las ventas.</div>`; return; }
+  c.innerHTML = impuestosAdic.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">
+      <input type="text" placeholder="Concepto (ej. tasa municipal)" value="${(t.nombre||'').replace(/"/g,'&quot;')}" oninput="impuestosAdic[${i}].nombre=this.value;cloudSave()" style="flex:1;min-width:110px;text-align:left">
+      <input type="number" value="${t.pct||0}" step="0.1" oninput="impuestosAdic[${i}].pct=parseFloat(this.value)||0;calcCostos()" style="max-width:62px"><span class="unit">%</span>
+      <span style="font-size:10.5px;color:var(--faint)">de</span>
+      <select onchange="updImpuestoAdic(${i},'base',this.value)" style="font-size:11px;padding:3px">
+        <option value="ingresos" ${t.base==='ingresos'?'selected':''}>las ventas</option>
+        <option value="ganancia" ${(!t.base||t.base==='ganancia')?'selected':''}>la ganancia gravable</option>
+        <option value="activo" ${t.base==='activo'?'selected':''}>el activo neto</option>
+      </select>
+      <button class="rowdel" onclick="delImpuestoAdic(${i})" title="Quitar">×</button>
+    </div>`).join("");
+}
+function updImpuestoAdic(i,campo,valor){ if(!impuestosAdic[i])return; impuestosAdic[i][campo]=valor; renderImpuestosAdic(); calcCostos(); }
+function addImpuestoAdic(){ impuestosAdic.push({nombre:"",pct:0,base:'ingresos'}); renderImpuestosAdic(); calcCostos(); }
+function delImpuestoAdic(i){ impuestosAdic.splice(i,1); renderImpuestosAdic(); calcCostos(); }
+function aceptarIanBase(){
+  const cap=(window.M1_capitalTotal||0), terr=(window.M2_terrCosto||0), des=(window.M3_desarrolloTotal||0);
+  const sug=Math.round(cap+terr+des);
+  if($("ianBase")) $("ianBase").value = sug>0?sug:0;
+  calcCostos();
+}
 // prestaciones voluntarias de socios: valores sugeridos por socio (montos de referencia, editables)
 const SEG_MED_SUG_POR_SOCIO=3000, SEG_RAP_SUG_POR_SOCIO=1500;
 function nSociosRef(){ return Math.max(1,(socios||[]).length); }
@@ -2130,6 +2315,23 @@ function calcCostos(){
   window.M5_segMedRapMensual   = segMonto;    // referencia (el motor usa M5_segItems)
   window.M5_segItems           = segItems;    // prestaciones de socios, cada una con su año de inicio
 
+  // ==== Impuestos: panel de la contadora (ISR + solidaria + activo neto + deducibles + adicionales) ====
+  const isrOn = $("isrOn") ? $("isrOn").checked : true;
+  window.M6_isrOn     = isrOn;
+  window.M6_isrPct    = num("isrPct");
+  window.M6_isrSolPct = num("isrSolPct");
+  window.M6_isrUmbral = num("isrUmbral");
+  if($("isrRates")) $("isrRates").style.display = isrOn ? '' : 'none';
+  window.M6_baseMode  = impBaseMode;
+  const ianOn = $("ianOn") ? $("ianOn").checked : false;
+  window.M6_ianOn   = ianOn;
+  window.M6_ianPct  = num("ianPct");
+  window.M6_ianBase = num("ianBase");
+  if($("ianRates")) $("ianRates").style.display = ianOn ? '' : 'none';
+  // listas dinámicas (se filtran las filas con valor > 0 para el motor)
+  window.M6_deducibles   = (deducibles||[]).map(d=>({nombre:d.nombre||'', tipo:(d.tipo==='pct'?'pct':'monto'), valor:d.valor||0, base:(d.base==='ingresos'?'ingresos':'ganancia')}));
+  window.M6_impuestosAdic= (impuestosAdic||[]).map(t=>({nombre:t.nombre||'', pct:t.pct||0, base:(t.base==='ingresos'?'ingresos':(t.base==='activo'?'activo':'ganancia'))}));
+
   // salidas visibles
   if($("tSalSueldo")) $("tSalSueldo").textContent = sueldoTot>0?L(sueldoTot):"—";
   if($("tSalViat"))   $("tSalViat").textContent   = viatTot>0?L(viatTot):"—";
@@ -2188,6 +2390,11 @@ function calcCostos(){
     v+=row(`<b>Prestaciones de socios:</b> ${segTxt.join(' · ')}`);
   }
   if($("verifCostos")) $("verifCostos").innerHTML=v;
+
+  // dibujar las listas de impuestos (sin robar el foco si están escribiendo en ellas)
+  { const fa=document.activeElement;
+    if(!(fa && fa.closest && fa.closest('#listaDeducibles'))) renderDeducibles();
+    if(!(fa && fa.closest && fa.closest('#listaImpAdic')))    renderImpuestosAdic(); }
 
   if(typeof calcProyeccion==='function') calcProyeccion();
   cloudSave();
@@ -2339,7 +2546,7 @@ function proyectar(){
 
   // ---- simulación mes a mes con cascada de 7 pasos ----
   let caja=cajaInicial;
-  let duenoDue=0,duenoPag=0, salDue=0,salPag=0, comDue=0,comPag=0, opexDue=0,opexPag=0, socDue=0,socPag=0, segDue=0,segPag=0, fondoPag=0, desaPag=0;
+  let duenoDue=0,duenoPag=0, salDue=0,salPag=0, comDue=0,comPag=0, opexDue=0,opexPag=0, socDue=0,socPag=0, segDue=0,segPag=0, fondoPag=0, desaPag=0, isrPag=0, impAdicPag=0;
   const rows=[];
   let hDueno=0,hSocios=0,hDesa=0,hGanancia=0;
   let sumIngreso=0, prevCaja=caja;
@@ -2400,7 +2607,7 @@ function proyectar(){
     // Al cerrar cada año, de lo que quedó en caja tras las prioridades: primero el % de DESARROLLO,
     // luego del resto el % de AHORRO, y lo que sobra es GANANCIA a socios. La caja queda en 0.
     // (La caja cierra en 0 cada año: todo se reparte. El panel de verificación lo confirma.)
-    let pDesa=0, ahorroM=0, gananciaM=0, baseDesaM=0, baseAhorroM=0;
+    let pDesa=0, ahorroM=0, gananciaM=0, baseDesaM=0, baseAhorroM=0, isrM=0, impAdicM=0, impBreakM=null;
     let reservaUsoM={dueno:0,sal:0,com:0,opex:0,soc:0,seg:0,fondo:0};
     if((m%12===0) || (m===H)){
       const y=Math.ceil(m/12);
@@ -2411,9 +2618,57 @@ function proyectar(){
         pDesa = Math.max(0, Math.min(desarrolloTotal-desaPag, caja*pctDesAnio(y)/100));
         desaPag+=pDesa; caja-=pDesa;
       }
-      baseAhorroM = caja;                                      // lo que queda tras desarrollo = base del % de ahorro
-      ahorroM = Math.max(0, caja*pctAhorroAnio(y)/100);
-      gananciaM = Math.max(0, caja-ahorroM);                   // el resto: ganancia a socios
+      // ---- IMPUESTOS (panel de la contadora): ISR + solidaria + activo neto (mínimo) + adicionales, menos deducibles ----
+      // Se calcula sobre la ganancia del año (lo que quedó tras prioridades y desarrollo), ANTES de repartir a socios.
+      // El año 1 excluye el capital de trabajo (no es renta). Todo sale del sistema (se paga a SAR / alcaldía).
+      {
+        let ingAnio=0; for(let mm=(y-1)*12+1; mm<=m; mm++) ingAnio += (ingreso[mm]||0);   // ventas del año (base de algunos %)
+        const gananciaBruta = Math.max(0, caja - (y===1 ? cajaInicial : 0));               // renta del año antes de ajustes fiscales
+        const baseRef = b => b==='ingresos' ? ingAnio : gananciaBruta;                     // base sobre la que se aplica un %
+        // deducibles: reducen la base gravable (exenciones, incentivos, donaciones deducibles). No salen de caja aquí.
+        let dedTot=0; const dedDet=[];
+        (window.M6_deducibles||[]).forEach(d=>{
+          const amt = (d && (d.tipo==='pct')) ? Math.max(0,(d.valor||0))/100*baseRef(d.base) : Math.max(0,(d && d.valor)||0);
+          if(amt>0){ dedTot+=amt; dedDet.push({nombre:(d.nombre||'deducible'), monto:amt}); }
+        });
+        dedTot = Math.min(dedTot, gananciaBruta);                                           // no puede exceder la renta del año
+        let baseGravable = Math.max(0, gananciaBruta - dedTot);
+        if(window.M6_baseMode==='repartido') baseGravable *= (1 - Math.min(100,Math.max(0,pctAhorroAnio(y)))/100);  // grava solo lo que se reparte
+        // ISR + aportación solidaria (5% sobre el excedente del umbral anual)
+        let isrPuro=0, solid=0;
+        if(window.M6_isrOn){
+          isrPuro = baseGravable*(window.M6_isrPct||0)/100;
+          solid   = Math.max(0, baseGravable-(window.M6_isrUmbral||0))*(window.M6_isrSolPct||0)/100;
+        }
+        // Impuesto al Activo Neto (1%): mínimo alternativo — se paga el MAYOR entre ISR y este
+        const ian = window.M6_ianOn ? Math.max(0,(window.M6_ianBase||0))*(window.M6_ianPct||0)/100 : 0;
+        const usaIAN = window.M6_ianOn && ian>0 && ian>=(isrPuro+solid);                    // ¿el mínimo de activo neto fue el que aplicó?
+        const coreTeorico = window.M6_isrOn ? Math.max(isrPuro+solid, ian) : ian;           // núcleo teórico: renta o activo neto
+        let isrCore = Math.min(caja, Math.max(0, coreTeorico));                             // no se puede pagar más que la caja del año
+        // impuestos adicionales (lista dinámica): cada uno = % sobre su base (ingresos, ganancia gravable o activo)
+        let adicRaw=0; const adicDet=[];
+        (window.M6_impuestosAdic||[]).forEach(t=>{
+          const b = t.base==='ingresos'?ingAnio : t.base==='activo'?Math.max(0,(window.M6_ianBase||0)) : baseGravable;
+          const amt = Math.max(0,(t.pct||0))/100*b;
+          if(amt>0){ adicRaw+=amt; adicDet.push({nombre:(t.nombre||'impuesto'), monto:amt, pct:(t.pct||0), base:(t.base||'ganancia')}); }
+        });
+        const adicTot = Math.min(Math.max(0, caja-isrCore), adicRaw);
+        isrM = isrCore; impAdicM = adicTot;
+        isrPag += isrM; impAdicPag += impAdicM;
+        caja -= (isrM + impAdicM);
+        // DESGLOSE = lo REALMENTE cobrado: si la caja no alcanzó, se prorratean los componentes para que sumen exactamente el total.
+        const fCore = coreTeorico>0 ? isrCore/coreTeorico : 0;                              // fracción del núcleo que sí se cobró
+        const isrCob   = usaIAN ? 0 : isrPuro*fCore;
+        const solidCob = usaIAN ? 0 : solid*fCore;
+        const ianCob   = usaIAN ? ian*fCore : 0;
+        const fAdic = adicRaw>0 ? adicTot/adicRaw : 0;                                      // fracción de los adicionales que sí se cobró
+        const adicCob = adicDet.map(x=>({nombre:x.nombre, monto:x.monto*fAdic, pct:x.pct, base:x.base})).filter(x=>x.monto>0.5);
+        impBreakM = { baseGravable, gananciaBruta, dedTot, deducibles:dedDet,
+          isr:isrCob, solidaria:solidCob, ian:ianCob, adic:adicCob, total:isrM+impAdicM };
+      }
+      baseAhorroM = caja;                                      // lo que queda tras desarrollo e impuestos = base del % de ahorro
+      ahorroM = Math.max(0, caja*Math.min(100,Math.max(0,pctAhorroAnio(y)))/100);   // el ahorro nunca supera la caja (0–100%)
+      gananciaM = Math.max(0, caja-ahorroM);                   // el resto: ganancia a socios (después de impuestos)
       caja = 0;                                                // la caja operativa cierra en 0
       // el AHORRO alimenta la RESERVA DE REINVERSIÓN, que se acumula año con año
       reserva += ahorroM;
@@ -2443,7 +2698,7 @@ function proyectar(){
     rows.push({m, ingreso:ingreso[m],
                dueno:pDueno+reservaUsoM.dueno, sal:pSal+reservaUsoM.sal, com:pCom+reservaUsoM.com, opex:pOpex+reservaUsoM.opex,
                soc:pSoc+reservaUsoM.soc, seg:pSeg+reservaUsoM.seg, fondo:pFondo+reservaUsoM.fondo,
-               desa:pDesa, ahorro:ahorroM, ganancia:gananciaM,
+               desa:pDesa, isr:isrM, impAdic:impAdicM, impBreak:impBreakM, ahorro:ahorroM, ganancia:gananciaM,
                baseDesa:baseDesaM, baseAhorro:baseAhorroM,
                arr, caja, reservaBal:reserva, reservaUso:reservaUsoM, reservaUsoTot:_ruTot,
                pctDesa: desarrolloTotal>0?Math.min(1,desaPag/desarrolloTotal):1});
@@ -2468,12 +2723,12 @@ function proyectar(){
   const anual=[];
   let cajaIniAnio=cajaInicial;
   for(let y=1;y<=nAnios;y++){
-    const a={y, ingreso:0,dueno:0,sal:0,com:0,opex:0,soc:0,seg:0,fondo:0,desa:0,ahorro:0,ganancia:0,cajaIni:cajaIniAnio,cajaFin:cajaIniAnio,pctDesa:0,baseDesa:0,baseAhorro:0,
+    const a={y, ingreso:0,dueno:0,sal:0,com:0,opex:0,soc:0,seg:0,fondo:0,desa:0,isr:0,impAdic:0,impBreak:null,ahorro:0,ganancia:0,cajaIni:cajaIniAnio,cajaFin:cajaIniAnio,pctDesa:0,baseDesa:0,baseAhorro:0,
       lotesVend:0, prima:0, cuota:0,
       reservaFin:0, reservaUsoTot:0, reservaUso:{dueno:0,sal:0,com:0,opex:0,soc:0,seg:0,fondo:0}, meses:[]};
     for(let m=(y-1)*12+1;m<=Math.min(y*12,H);m++){
       const r=rows[m-1];
-      a.ingreso+=r.ingreso; a.dueno+=r.dueno; a.sal+=r.sal; a.com+=r.com; a.opex+=r.opex; a.soc+=r.soc; a.seg+=r.seg; a.fondo+=r.fondo; a.desa+=r.desa;
+      a.ingreso+=r.ingreso; a.dueno+=r.dueno; a.sal+=r.sal; a.com+=r.com; a.opex+=r.opex; a.soc+=r.soc; a.seg+=r.seg; a.fondo+=r.fondo; a.desa+=r.desa; a.isr+=(r.isr||0); a.impAdic+=(r.impAdic||0); if(r.impBreak) a.impBreak=r.impBreak;
       a.lotesVend+=lotesVendidosMes[m]; a.prima+=primaMes[m]; a.cuota+=cuotaMes[m];   // ventas y desglose del ingreso (primas vs cuotas)
       a.ahorro+=r.ahorro; a.ganancia+=r.ganancia;
       a.reservaUsoTot+=r.reservaUsoTot||0; Object.keys(a.reservaUso).forEach(k=>a.reservaUso[k]+=(r.reservaUso&&r.reservaUso[k])||0);
@@ -2481,19 +2736,23 @@ function proyectar(){
       a.cajaFin=r.caja; a.reservaFin=r.reservaBal; a.pctDesa=r.pctDesa; a.arr=r.arr; a.meses.push(r);   // a.arr = faltante por prioridad al cierre del año
     }
     a.pagos = a.dueno+a.sal+a.com+a.opex+a.soc+a.seg+a.fondo+a.desa;   // prioridades + desarrollo del año
-    a.distribuible = a.ahorro + a.ganancia;                    // lo repartido del año (tras desarrollo)
+    a.distribuible = a.ahorro + a.ganancia;                    // lo repartido del año (tras desarrollo e impuestos)
     a.profitNet = a.distribuible;                              // compat: la "ganancia neta" del año = lo repartido
-    a.total = a.pagos + a.ahorro + a.ganancia;                 // alto de la barra = caja inicial del año + ingresos
+    a.total = a.pagos + a.isr + a.impAdic + a.ahorro + a.ganancia;   // alto de la barra = caja inicial + ingresos (impuestos incluidos: salieron del sistema)
     utilidad += a.distribuible;                                // utilidad total = suma de lo repartido
     cajaIniAnio=a.cajaFin;                                     // = 0 (la caja se reinicia cada año)
     anual.push(a);
   }
   utilidad -= reservaUsadaTot;   // lo que la reserva usó para cubrir faltantes fue costo pagado, no utilidad
+  // el déficit sin cubrir (obligaciones que nunca se alcanzaron a pagar) es una deuda real: se resta de la
+  // utilidad, que así SÍ puede salir NEGATIVA. (El desarrollo incompleto se reporta aparte, en arrears.desa.)
+  const deficitSinCubrir = faltaDueno+faltaSal+faltaCom+faltaOpex+faltaSoc+faltaSeg+faltaFondo;
+  utilidad -= deficitSinCubrir;
   margen = sumIngreso>0 ? utilidad/sumIngreso*100 : 0;
 
-  return { H, rows, anual, cajaInicial, sumIngreso, cajaFinal, utilidad, margen,
+  return { H, rows, anual, cajaInicial, sumIngreso, cajaFinal, utilidad, margen, deficitSinCubrir,
     reservaFinal:reserva, reservaUsadaTot, reservaUso,
-    totales:{dueno:duenoPag, sal:salPag, com:comPag, opex:opexPag, soc:socPag, seg:segPag, fondo:fondoPag, desa:desaPag, interes:interesSocios, saldoDueno, desarrolloTotal},
+    totales:{dueno:duenoPag, sal:salPag, com:comPag, opex:opexPag, soc:socPag, seg:segPag, fondo:fondoPag, desa:desaPag, isr:isrPag, impAdic:impAdicPag, impuesto:isrPag+impAdicPag, interes:interesSocios, saldoDueno, desarrolloTotal},
     arrears:{dueno:faltaDueno, sal:faltaSal, com:faltaCom, opex:faltaOpex, soc:faltaSoc, seg:faltaSeg, fondo:faltaFondo, desa:faltaDesa},
     hitos:{dueno:hDueno, socios:hSocios, desa:hDesa, ganancia:hGanancia} };
 }
@@ -2527,6 +2786,29 @@ function calcProyeccion(){
 
   // KPI de costos: total recurrente de todo el proyecto
   if($("kCosTotal")) $("kCosTotal").textContent = M ? L(M.totales.sal+M.totales.com+M.totales.opex+(M.totales.seg||0)) : "—";
+  // Impuestos estimados de todo el proyecto (readout de la tarjeta) + tasa efectiva + desglose por concepto
+  if($("rIsrTotal")){
+    if(!M){ $("rIsrTotal").textContent = "—"; if($("rImpDesglose")) $("rImpDesglose").innerHTML=""; }
+    else {
+      const _imp=(M.totales.isr||0)+(M.totales.impAdic||0), _preUtil=(M.utilidad||0)+_imp;   // utilidad ANTES de impuestos
+      if(_imp>0.5){
+        const _ef = _preUtil>0 ? (_imp/_preUtil*100) : 0;
+        $("rIsrTotal").innerHTML = `${L(_imp)} <span style="font-size:10px;color:var(--faint);font-weight:400">· ≈${N1(_ef)}% de la ganancia (te queda el ${N1(100-_ef)}%)</span>`;
+        // desglose: suma de los componentes de todos los años (ISR, solidaria, activo neto, cada adicional)
+        if($("rImpDesglose")){
+          let sIsr=0,sSol=0,sIan=0; const adicMap={};
+          M.anual.forEach(a=>{ const ib=a.impBreak; if(!ib)return; sIsr+=ib.isr||0; sSol+=ib.solidaria||0; sIan+=ib.ian||0;
+            (ib.adic||[]).forEach(x=>{ adicMap[x.nombre||'impuesto']=(adicMap[x.nombre||'impuesto']||0)+(x.monto||0); }); });
+          const partes=[];
+          if(sIsr>0.5) partes.push(`ISR ${L(sIsr)}`);
+          if(sSol>0.5) partes.push(`solidaria ${L(sSol)}`);
+          if(sIan>0.5) partes.push(`activo neto ${L(sIan)}`);
+          Object.keys(adicMap).forEach(k=>{ if(adicMap[k]>0.5) partes.push(`${k} ${L(adicMap[k])}`); });
+          $("rImpDesglose").innerHTML = partes.length ? `= ${partes.join(' + ')}` : '';
+        }
+      } else { $("rIsrTotal").textContent = "L 0"; if($("rImpDesglose")) $("rImpDesglose").innerHTML=""; }
+    }
+  }
 
   if(!M){
     if($("proyChart")) $("proyChart").innerHTML="";
@@ -2545,7 +2827,7 @@ function calcProyeccion(){
   if($("kPrUtil")){
     $("kPrUtil").textContent = L(M.utilidad);
     $("kPrUtil").style.color = M.utilidad>=0?"var(--teal)":"var(--clay)";
-    $("kPrUtilNota").textContent = M.hitos.ganancia>0?`ganancias desde el mes ${N(M.hitos.ganancia)}`:"al terminar";
+    $("kPrUtilNota").textContent = (M.deficitSinCubrir>1) ? `ya se restó L ${Math.round(M.deficitSinCubrir).toLocaleString('es-HN')} de déficit sin cubrir` : (M.hitos.ganancia>0?`ganancias desde el mes ${N(M.hitos.ganancia)}`:"al terminar");
     $("kPrMargen").textContent = N1(M.margen)+" %";
     $("kPrDesMes").textContent = M.hitos.desa>0?fmtMesHito(M.hitos.desa):(M.totales.desarrolloTotal<=0?"sin desarrollo":"no se completa");
     $("kPrDesMesNota").textContent = M.arrears.desa>1?`faltan ${L(M.arrears.desa)}`:"100% financiado";
@@ -2608,6 +2890,7 @@ const PROY_CATS=[
 ];
 const RESERVA_COL='#B9D9CE';        // colchón de caja (aún no es ganancia)
 const AHORRO_COL='#546E7A';         // ahorro a capital (ganancia reinvertida)
+const ISR_COL='#34495E';            // ISR (impuesto sobre la renta) — sale del sistema al SAR
 const COL_P='#B4541F', COL_D='#2E7DA8', COL_A='#546E7A';   // colores de P (dueño), D (desarrollo), A (ahorro) — se usan en todos los rótulos
 const BASE_OBL_COL='#2C3E50';       // línea: presupuesto después de obligaciones (base de D)
 const BASE_DES_COL='#8E6E53';       // línea: presupuesto después de desarrollo (base de A)
@@ -2616,7 +2899,7 @@ function socioColor(i){ return SOCIO_RAMP[i%SOCIO_RAMP.length]; }
 function moneyShort(v){ v=Math.round(v); if(v>=1e6) return 'L '+(v/1e6).toFixed(1)+'M'; if(v>=1e3) return 'L '+Math.round(v/1e3)+'k'; return 'L '+v; }
 // ---- ventana emergente: ampliar la barra de un año para leerla mejor ----
 // a qué módulo lleva cada concepto al hacer clic (tab + elemento al que hace scroll)
-const NAV_CONCEPTO={ dueno:['terreno','terrPagoAnios'], sal:['costos','salBody'], com:['costos','comPct'], opex:['costos','listaOpex'], soc:['sociedad','tPart'], seg:['costos','segMedico'], fondo:['sociedad','reinvWrap'], desa:['lotes','listaDesarrollo'], ahorro:['proy','proyAhorro'], ganancia:['sociedad','tPart'] };
+const NAV_CONCEPTO={ dueno:['terreno','terrPagoAnios'], sal:['costos','salBody'], com:['costos','comPct'], opex:['costos','listaOpex'], soc:['sociedad','tPart'], seg:['costos','segMedico'], fondo:['sociedad','reinvWrap'], desa:['lotes','listaDesarrollo'], isr:['costos','isrCard'], ahorro:['proy','proyAhorro'], ganancia:['sociedad','tPart'] };
 function irDesdeBarra(tab, ancla){ cerrarBarraDetalle(); if(typeof setTab==='function') setTab(tab); if(ancla){ setTimeout(()=>{ const el=document.getElementById(ancla); if(el && el.scrollIntoView){ try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){} } },60); } }
 function setBarraYear(kind,y,v){ if(kind==='P') setPanelDuenoYear(y,v); else if(kind==='D') setPanelDesYear(y,v); else if(kind==='A') setPanelAhorroYear(y,v); abrirBarraDetalle(y); }
 function abrirBarraDetalle(y){
@@ -2624,6 +2907,7 @@ function abrirBarraDetalle(y){
   const a=M.anual.find(x=>x.y===y); if(!a) return;
   const segs=[];
   PROY_CATS.forEach(c=> segs.push({key:c.k, lab:c.lab, col:c.col, val:a[c.k]||0, zone: c.k==='desa'?'desa':'oblig'}));
+  segs.push({key:'isr', lab:'Impuestos (ISR y otros)', col:ISR_COL, val:(a.isr||0)+(a.impAdic||0), zone:'isr'});   // salen antes de repartir a socios
   const rep=repartoAnio(a);   // mismo reparto que la tabla y el gráfico
   segs.push({key:'ahorro', lab:'Ahorro a capital', col:AHORRO_COL, val:rep.ahorro, zone:'profit'});
   segs.push({key:'ganancia', lab:'Ganancia (a socios)', col:'#0E7C66', val:rep.ganancia, zone:'profit'});
@@ -2649,10 +2933,10 @@ function abrirBarraDetalle(y){
   // lista al lado, en el MISMO orden visual que la barra (dueño abajo, ganancia arriba), con las divisiones de presupuesto.
   // 3 rieles verticales a la derecha = las 3 BASES sobre las que se aplica cada %, cada uno del color de su porcentaje:
   //   P (rojo) sobre TODA la barra · D (azul) sobre lo que queda tras obligaciones (desarrollo+ahorro+ganancia) · A (gris) sobre lo que queda tras desarrollo (ahorro+ganancia)
-  const baseD = (shown.filter(s=>s.zone==='desa'||s.zone==='profit').reduce((t,s)=>t+s.val,0))||1;   // base de D
-  const baseA = (shown.filter(s=>s.zone==='profit').reduce((t,s)=>t+s.val,0))||1;                     // base de A
-  const baseDe = z => z==='profit'?baseA : z==='desa'?baseD : total;    // base del % según su zona
-  const colDe  = z => z==='profit'?COL_A : z==='desa'?COL_D : COL_P;     // color del % = color de su riel
+  const baseD = (shown.filter(s=>s.zone==='desa'||s.zone==='isr'||s.zone==='profit').reduce((t,s)=>t+s.val,0))||1;   // base de D (incluye ISR: sale tras desarrollo)
+  const baseA = (shown.filter(s=>s.zone==='profit').reduce((t,s)=>t+s.val,0))||1;                     // base de A (tras desarrollo e ISR)
+  const baseDe = z => z==='profit'?baseA : (z==='desa'||z==='isr')?baseD : total;    // base del % según su zona
+  const colDe  = z => z==='profit'?COL_A : (z==='desa'||z==='isr')?COL_D : COL_P;     // color del % = color de su riel
   const RP=4, RD=13, RA=22;
   const rieles = (p,d,aa)=> (p?`<div title="base de P: toda la barra (100%)" style="position:absolute;right:${RP}px;top:0;bottom:-1px;width:3px;background:${COL_P}"></div>`:'')
                           + (d?`<div title="base de D: lo que queda tras obligaciones" style="position:absolute;right:${RD}px;top:0;bottom:-1px;width:3px;background:${COL_D}"></div>`:'')
@@ -2668,22 +2952,27 @@ function abrirBarraDetalle(y){
   const divisor=(col,lab,p,d,aa)=>`<div style="position:relative;display:flex;align-items:center;gap:7px;padding:3px 30px 3px 0"><span style="flex:1;border-top:1.5px dotted ${col}"></span><span style="font-size:8.5px;color:${col};font-weight:600;white-space:nowrap">${lab}</span><span style="flex:1;border-top:1.5px dotted ${col}"></span>${rieles(p,d,aa)}</div>`;
   let prevZone=null;
   shown.slice().reverse().forEach(s=>{
-    if(prevZone==='profit' && s.zone==='desa') list+=divisor(BASE_DES_COL,'presupuesto tras desarrollo', true, true, false);          // aquí termina A; siguen D y P
+    // la línea "tras desarrollo (e impuestos)" marca la base de A: va sobre el ISR si lo hay, o sobre el desarrollo si no.
+    if(prevZone==='profit' && (s.zone==='isr'||s.zone==='desa')) list+=divisor(BASE_DES_COL, s.zone==='isr'?'presupuesto tras desarrollo e impuestos':'presupuesto tras desarrollo', true, true, false);
     if(prevZone && prevZone!=='oblig' && s.zone==='oblig') list+=divisor(BASE_OBL_COL,'presupuesto tras obligaciones', true, false, false);  // aquí termina D; sigue solo P
     prevZone=s.zone;
     const nav=NAV_CONCEPTO[s.key]||['',''];
+    const esIsr=(s.zone==='isr');
     const pct=(s.val/baseDe(s.zone)*100), pc=colDe(s.zone);
+    // ISR no es un % que ajustes: se muestra el monto y una etiqueta "al SAR" en vez del porcentaje
+    const derecha = esIsr ? `<span style="color:${ISR_COL};font-weight:700;width:36px;text-align:right;font-size:9.5px">impto</span>` : `<span style="color:${pc};font-weight:700;width:36px;text-align:right">${pct.toFixed(0)}%</span>`;
     list+=`<div onclick="irDesdeBarra('${nav[0]}','${nav[1]}')" title="Ir a editar ${s.lab}" style="position:relative;display:flex;align-items:center;gap:8px;padding:5px 30px 5px 0;font-size:12px;border-bottom:1px solid var(--line);cursor:pointer">
     <span style="width:12px;height:12px;border-radius:3px;background:${s.col};flex-shrink:0"></span>
     <span style="flex:1;color:var(--ink)">${s.lab}</span>
     <span style="font-family:var(--mono);font-weight:600;color:var(--ink)">${L(s.val)}</span>
-    <span style="color:${pc};font-weight:700;width:36px;text-align:right">${pct.toFixed(0)}%</span>
+    ${derecha}
     <span style="color:var(--faint);font-size:12px">›</span>
-    ${rieles(true, s.zone==='desa'||s.zone==='profit', s.zone==='profit')}
+    ${rieles(true, s.zone==='desa'||s.zone==='isr'||s.zone==='profit', s.zone==='profit')}
   </div>`; });
   list+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 30px 0 0;font-size:12.5px;font-weight:700">
     <span style="flex:1">Total movido</span><span style="font-family:var(--mono)">${L(total)}</span><span style="width:50px"></span></div>`;
-  const cajaIniA=a.cajaIni||0, repart=(a.ahorro||0)+(a.ganancia||0);
+  const cajaIniA=a.cajaIni||0, repart=(a.ahorro||0)+(a.ganancia||0), isrA=(a.isr||0)+(a.impAdic||0);
+  const notaIsr = isrA>0 ? `, pagó <b>${L(isrA)}</b> de impuestos` : '';
   if(arrSum>1){
     // DÉFICIT: ni ventas + capital de trabajo + reserva alcanzaron para todas las obligaciones
     const disp=cajaIniA+ing, fuentes = cajaIniA>1 ? `ventas ${L(ing)} + ${L(cajaIniA)} de capital de trabajo` : `ventas ${L(ing)}`;
@@ -2691,7 +2980,7 @@ function abrirBarraDetalle(y){
     list+=`<div style="font-size:11px;color:#B4231C;margin-top:9px;line-height:1.45">El dinero disponible este año (<b>${L(disp)}</b>: ${fuentes})${resNota} no alcanzó para todas las obligaciones: <b>faltaron ${L(arrSum)}</b> — es el <b>déficit</b> en rojo arriba de la barra. Se pagó primero lo más prioritario; el resto queda pendiente.</div>`;
   } else if(cajaIniA>1){
     // año 1: el dinero disponible = ventas + lo que había en caja al empezar (el capital de trabajo)
-    list+=`<div style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45">Este año dispuso de <b>${L(cajaIniA+ing)}</b>: ventas <b>${L(ing)}</b> + <b>${L(cajaIniA)}</b> que había en caja al empezar (tu capital de trabajo). Pagó prioridades y desarrollo (<b>${L(pagos)}</b>) y repartió el resto (<b>${L(repart)}</b>: ahorro + ganancia). La caja cerró en <b>0</b>.</div>`;
+    list+=`<div style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45">Este año dispuso de <b>${L(cajaIniA+ing)}</b>: ventas <b>${L(ing)}</b> + <b>${L(cajaIniA)}</b> que había en caja al empezar (tu capital de trabajo). Pagó prioridades y desarrollo (<b>${L(pagos)}</b>)${notaIsr} y repartió el resto (<b>${L(repart)}</b>: ahorro + ganancia). La caja cerró en <b>0</b>.</div>`;
   } else if(pagos>ing+1){
     const ruA=a.reservaUsoTot||0;
     if(ruA>1){
@@ -2700,7 +2989,19 @@ function abrirBarraDetalle(y){
       list+=`<div style="font-size:11px;color:var(--clay);margin-top:9px;line-height:1.4">⚠ Las prioridades y el desarrollo (${L(pagos)}) superaron las ventas del año (${L(ing)}); la diferencia (<strong>${L(pagos-ing)}</strong>) se cubrió con caja de otros años. Este año no quedó sobrante para repartir.</div>`;
     }
   } else {
-    list+=`<div style="font-size:11px;color:var(--teal);margin-top:9px;line-height:1.4">✓ Las ventas del año (${L(ing)}) cubrieron prioridades y desarrollo (${L(pagos)}) y dejaron <b>${L(repart)}</b> para repartir (ahorro + ganancia). La caja cerró en <b>0</b>.</div>`;
+    list+=`<div style="font-size:11px;color:var(--teal);margin-top:9px;line-height:1.4">✓ Las ventas del año (${L(ing)}) cubrieron prioridades y desarrollo (${L(pagos)})${notaIsr} y dejaron <b>${L(repart)}</b> para repartir (ahorro + ganancia). La caja cerró en <b>0</b>.</div>`;
+  }
+  // desglose de impuestos del año (ISR, solidaria, activo neto, adicionales y deducibles aplicados)
+  const ib=a.impBreak;
+  if(ib && ((a.isr||0)+(a.impAdic||0))>0.5){
+    const li=[];
+    if((ib.isr||0)>0.5) li.push(`ISR ${L(ib.isr)}`);
+    if((ib.solidaria||0)>0.5) li.push(`solidaria ${L(ib.solidaria)}`);
+    if((ib.ian||0)>0.5) li.push(`activo neto (mínimo) ${L(ib.ian)}`);
+    (ib.adic||[]).forEach(x=>{ if((x.monto||0)>0.5) li.push(`${x.nombre||'impuesto'} ${L(x.monto)}`); });
+    const dedTxt = (ib.dedTot||0)>0.5 ? ` Base reducida por deducibles: −${L(ib.dedTot)}${(ib.deducibles&&ib.deducibles.length)?` (${ib.deducibles.map(x=>x.nombre||'ded.').join(', ')})`:''}.` : '';
+    list+=`<div style="margin-top:8px;background:var(--surface-2);border-radius:7px;padding:7px 10px;font-size:10.5px;color:var(--muted);line-height:1.5">
+      <b style="color:${ISR_COL}">Impuestos del año ${L((a.isr||0)+(a.impAdic||0))}</b> = ${li.join(' + ')}. Sobre una base gravable de <b>${L(ib.baseGravable||0)}</b>.${dedTxt}</div>`;
   }
   list+=`</div>`;
   // editor de porcentajes de este año, con la BASE de cada % (P sólo si el dueño se paga por % de ventas)
@@ -2793,6 +3094,8 @@ function renderProyChart(M){
       seg(a[c.k]||0, c.col, c.lab); });
     if(yTopObl==null) yTopObl=yTop;
     const yTopDesa=yTop;   // tras desarrollo = piso de "la ganancia"
+    // Impuestos (ISR + solidaria + activo neto + adicionales): salen del sistema, antes de repartir a socios
+    seg((a.isr||0)+(a.impAdic||0), ISR_COL, 'Impuestos (ISR, solidaria y adicionales)');
     // la ganancia NETA del año, partida en ahorro a capital + lo que va a socios (mismo reparto que la tabla y el modal)
     const rep=repartoAnio(a);
     seg(rep.ahorro, AHORRO_COL, 'Ahorro a capital (reinversión)');
@@ -2835,6 +3138,7 @@ function renderProyChart(M){
   if(leg){
     const chip=(col,lab)=>`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:2px;background:${col};display:inline-block"></span>${lab}</span>`;
     let html = PROY_CATS.map(c=>chip(c.col,c.lab)).join("");
+    if(years.some(a=>((a.isr||0)+(a.impAdic||0))>0.5)) html += chip(ISR_COL,'Impuestos');
     const hayAhorro = years.some(a=>repartoAnio(a).ahorro>0.5);
     if(hayAhorro) html += chip(AHORRO_COL,'Ahorro a capital');
     html += chip('#0E7C66','Ganancia (a socios)');
@@ -2917,6 +3221,16 @@ function renderProyPanel(M){
     </div>
     <div style="font-size:9.5px;color:var(--faint);line-height:1.35;margin-top:4px">% de <b>lo disponible</b> (ventas − obligaciones) que se invierte en desarrollo cada año; el resto es ganancia. 100% = sin ganancia hasta completar el desarrollo. Edita años puntuales debajo (D).</div>
   </div>`;
+  // control de Ahorro a capital: % de lo que queda tras desarrollo e impuestos que se aparta a la reserva
+  h+=`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+    <div style="font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:5px">Ahorro a capital</div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="font-size:11px;color:var(--muted)">% base</span>
+      <input type="number" step="1" min="0" max="100" value="${N1(pctAhorroBase())}" oninput="setAhorroPctBasePanel(this.value)" title="% de lo que queda tras desarrollo e impuestos que se ahorra a capital cada año — espejo del campo de la utilidad" style="width:52px;text-align:right;padding:3px 5px;font-size:11px">
+      <span class="unit">%</span>
+    </div>
+    <div style="font-size:9.5px;color:var(--faint);line-height:1.35;margin-top:4px">% de <b>lo que queda tras desarrollo e impuestos</b> que se aparta a la reserva de reinversión; el resto es la ganancia a socios. Edita años puntuales debajo (A).</div>
+  </div>`;
   const edP=Object.keys(duenoPctOv).length>0, edD=Object.keys(desPctOv).length>0, edA=Object.keys(ahorroPctOv).length>0;
   h+=`<div style="margin-top:11px;padding-top:9px;border-top:1px solid var(--line)">`;
   if(!edP && !edD && !edA){
@@ -2955,9 +3269,10 @@ function _paintCell(id, ov){ const el=document.getElementById(id); if(!el) retur
   el.style.fontWeight = ov?'700':'600';
 }
 function setPanelDuenoYear(y,v){ const nv=parseFloat(v); if(isNaN(nv)||Math.abs(nv-pctDuenoBase())<0.001) delete duenoPctOv[y]; else duenoPctOv[y]=nv; calcProyeccion(); _paintCell('edc_P_'+y, duenoPctOv[y]!=null); cloudSave(); }
-function setPanelAhorroYear(y,v){ const nv=parseFloat(v); if(isNaN(nv)||Math.abs(nv-pctAhorroBase())<0.001) delete ahorroPctOv[y]; else ahorroPctOv[y]=nv; calcProyeccion(); _paintCell('edc_A_'+y, ahorroPctOv[y]!=null); cloudSave(); }
+function setPanelAhorroYear(y,v){ const nv=parseFloat(v); if(isNaN(nv)||Math.abs(nv-pctAhorroBase())<0.001) delete ahorroPctOv[y]; else ahorroPctOv[y]=Math.max(0,Math.min(100,nv)); calcProyeccion(); _paintCell('edc_A_'+y, ahorroPctOv[y]!=null); cloudSave(); }
 function setPanelDesYear(y,v){ let nv=parseFloat(v); if(isNaN(nv)||Math.abs(nv-pctDesBase())<0.001){ delete desPctOv[y]; } else { desPctOv[y]=Math.max(0,Math.min(100,nv)); } calcProyeccion(); _paintCell('edc_D_'+y, desPctOv[y]!=null); cloudSave(); }
 function setDesPctBasePanel(v){ desPctBase=Math.max(0,Math.min(100,parseFloat(v)||0)); calcProyeccion(); cloudSave(); }
+function setAhorroPctBasePanel(v){ const nv=Math.max(0,Math.min(100,parseFloat(v)||0)); if($("proyAhorro")) $("proyAhorro").value=nv; calcProyeccion(); cloudSave(); }
 function setFlujoVenta(mode){ ventaFlujoMode=(mode==='rampa')?'rampa':'plano'; window.M4_flujoMode=ventaFlujoMode; calcVentas(); }   // calcVentas→calcCostos→calcProyeccion (redibuja) y agenda el guardado
 // planilla mensual (L/mes) por año — reemplaza la base del Módulo 5 sólo para ese año
 // revierte por tipo: 'P' dueño, 'D' desarrollo, 'A' ahorro; sin argumento revierte todo
@@ -2973,14 +3288,15 @@ function renderProyTabla(M){
   const t=$("proyTabla"); if(!t) return;
   const hayFondo = M.totales.fondo>1;
   const haySeg = M.totales.seg>1;
+  const hayIsr = ((M.totales.isr||0)+(M.totales.impAdic||0))>1;
   const parts=window.M1_participaciones||[];
   const nombres=window.M1_nombresSocios||[];
   // colores de encabezado = mismos de la gráfica, para casar cada columna con su barra
-  const CH={ing:'#0E7C66',dueno:'#B4541F',sal:'#C99A2E',com:'#7A5EA8',opex:'#7C8A84',soc:'#5E6E68',seg:'#B85C8A',fondo:'#C98A7A',desa:'#2E7DA8',aho:'#546E7A',gan:'#0E7C66'};
+  const CH={ing:'#0E7C66',dueno:'#B4541F',sal:'#C99A2E',com:'#7A5EA8',opex:'#7C8A84',soc:'#5E6E68',seg:'#B85C8A',fondo:'#C98A7A',desa:'#2E7DA8',isr:'#34495E',aho:'#546E7A',gan:'#0E7C66'};
   const th=(lab,col)=>`<th${col?` style="color:${col}"`:''}>${lab}</th>`;
   const socTh = parts.map((p,i)=>th((nombres[i]||('Socio '+(i+1))),socioColor(i))).join('');
   let h=`<thead><tr>
-    <th style="text-align:left">Periodo</th>${th('Ingresos',CH.ing)}${th('Dueño',CH.dueno)}${th('Salarios',CH.sal)}${th('Comis.',CH.com)}${th('Operativos',CH.opex)}${th('Repos. inicial',CH.soc)}${haySeg?th('Seg+RAP',CH.seg):''}${hayFondo?th('Al fondo',CH.fondo):''}${th('Desarrollo',CH.desa)}${th('Ahorro',CH.aho)}${th('Ganancia',CH.gan)}${socTh}<th title="Reserva de reinversión: el ahorro se va acumulando aquí. Si un año no alcanza la caja, esta reserva cubre el faltante y baja (se ve en rojo).">Reserva</th>${th('% Des.',CH.desa)}
+    <th style="text-align:left">Periodo</th>${th('Ingresos',CH.ing)}${th('Dueño',CH.dueno)}${th('Salarios',CH.sal)}${th('Comis.',CH.com)}${th('Operativos',CH.opex)}${th('Repos. inicial',CH.soc)}${haySeg?th('Seg+RAP',CH.seg):''}${hayFondo?th('Al fondo',CH.fondo):''}${th('Desarrollo',CH.desa)}${hayIsr?th('Impuestos',CH.isr):''}${th('Ahorro',CH.aho)}${th('Ganancia',CH.gan)}${socTh}<th title="Reserva de reinversión: el ahorro se va acumulando aquí. Si un año no alcanza la caja, esta reserva cubre el faltante y baja (se ve en rojo).">Reserva</th>${th('% Des.',CH.desa)}
   </tr></thead><tbody>`;
   M.anual.forEach(a=>{
     const exp=!!_proyExpandido[a.y];
@@ -2994,7 +3310,7 @@ function renderProyTabla(M){
       <td style="text-align:left;font-weight:700">${exp?'▾':'▸'} Año ${a.y}</td>
       <td style="color:var(--teal);font-weight:700">${_celMoney(a.ingreso)}</td>
       <td>${_celObl(a.dueno,ar.dueno)}</td><td>${_celObl(a.sal,ar.sal)}</td><td>${_celObl(a.com,ar.com)}</td>
-      <td>${_celObl(a.opex,ar.opex)}</td><td>${_celObl(a.soc,ar.soc)}</td>${haySeg?`<td>${_celObl(a.seg,ar.seg)}</td>`:''}${hayFondo?`<td>${_celObl(a.fondo,ar.fondo)}</td>`:''}<td>${_celMoney(a.desa)}</td>
+      <td>${_celObl(a.opex,ar.opex)}</td><td>${_celObl(a.soc,ar.soc)}</td>${haySeg?`<td>${_celObl(a.seg,ar.seg)}</td>`:''}${hayFondo?`<td>${_celObl(a.fondo,ar.fondo)}</td>`:''}<td>${_celMoney(a.desa)}</td>${hayIsr?`<td style="color:${CH.isr}">${_celMoney((a.isr||0)+(a.impAdic||0))}</td>`:''}
       <td style="color:${CH.aho}">${loss?_cel0():_celG(ahoY)}</td><td style="color:${CH.gan};font-weight:600">${loss?_cel0():_celG(ganY)}</td>${socCells}
       <td style="color:var(--purple)">${L(a.reservaFin||0)}${(a.reservaUsoTot||0)>1?` <span style="color:var(--clay);font-size:10px" title="cubrió faltantes este año">−${L(a.reservaUsoTot)}</span>`:''}</td>
       <td>${pdCell}</td>
@@ -3007,7 +3323,7 @@ function renderProyTabla(M){
         h+=`<tr style="font-size:11.5px;color:var(--muted)">
           <td style="text-align:left;padding-left:20px">mes ${r.m}</td>
           <td>${_celMoney(r.ingreso)}</td><td>${_celMoney(r.dueno)}</td><td>${_celMoney(r.sal)}</td><td>${_celMoney(r.com)}</td>
-          <td>${_celMoney(r.opex)}</td><td>${_celMoney(r.soc)}</td>${haySeg?`<td>${_celMoney(r.seg)}</td>`:''}${hayFondo?`<td>${_celMoney(r.fondo)}</td>`:''}<td>${_celMoney(r.desa)}</td>
+          <td>${_celMoney(r.opex)}</td><td>${_celMoney(r.soc)}</td>${haySeg?`<td>${_celMoney(r.seg)}</td>`:''}${hayFondo?`<td>${_celMoney(r.fondo)}</td>`:''}<td>${_celMoney(r.desa)}</td>${hayIsr?`<td style="color:${CH.isr}">${_celMoney((r.isr||0)+(r.impAdic||0))}</td>`:''}
           <td>${lossM?_cel0():_celG(ahoM)}</td><td>${lossM?_cel0():_celG(ganM)}</td>${socM}<td style="color:var(--purple)">${L(r.reservaBal||0)}${(r.reservaUsoTot||0)>1?` <span style="color:var(--clay);font-size:10px">−${L(r.reservaUsoTot)}</span>`:''}</td><td>${pdmCell}</td>
         </tr>`;
       });
@@ -3064,7 +3380,8 @@ function renderProyVerif(M){
   const sumGan=M.anual.reduce((s,a)=>s+(a.ganancia||0),0);   // ganancia repartida a socios
   const reservaNeta=M.reservaFinal||0, usado=M.reservaUsadaTot||0;
   const entradas=M.cajaInicial+M.sumIngreso;
-  const salidas=T.dueno+T.sal+T.com+T.opex+T.soc+(T.seg||0)+T.fondo+T.desa+sumGan+reservaNeta;
+  const impTot=(T.isr||0)+(T.impAdic||0);
+  const salidas=T.dueno+T.sal+T.com+T.opex+T.soc+(T.seg||0)+T.fondo+T.desa+impTot+sumGan+reservaNeta;
   const cuadra=Math.abs(entradas-salidas)<2;
   let v=""; const row=t=>`<div>${t}</div>`;
   v+=row(`<b>Caja inicial:</b> ${L(M.cajaInicial)} <span style="color:var(--faint)">(capital − enganche − costos de compra)</span>`);
@@ -3074,9 +3391,10 @@ function renderProyVerif(M){
   v+=row(`<b>− Devolución a socios:</b> ${L(T.soc)}${T.fondo>0?` + fondo ${L(T.fondo)}`:""} <span style="color:var(--faint)">(incluye interés ${L(T.interes)})</span>`);
   if(T.seg>0) v+=row(`<b>− Seguro médico + RAP (socios):</b> ${L(T.seg)}`);
   v+=row(`<b>− Desarrollo:</b> ${L(T.desa)} de ${L(T.desarrolloTotal)}`);
+  if(impTot>0) v+=row(`<b>− Impuestos:</b> ${L(impTot)}${(T.impAdic||0)>0?` <span style="color:var(--faint)">(ISR ${L(T.isr)} + adicionales ${L(T.impAdic)})</span>`:` <span style="color:var(--faint)">(ISR + solidaria)</span>`}`);
   v+=row(`<b>− Ganancia a socios:</b> ${L(sumGan)}`);
   v+=row(`<b>= Reserva de reinversión:</b> <b>${L(reservaNeta)}</b> <span style="color:var(--faint)">(ahorro retenido${usado>1?`, ya descontados ${L(usado)} usados para cubrir faltantes`:''})</span>`);
-  v+=`<div class="note ${cuadra?'ok':'warn'}" style="margin-top:8px">${cuadra?"✓":"⚠"} Entradas (${L(entradas)}) = obligaciones + desarrollo + ganancia + reserva (${L(salidas)}). ${cuadra?"La cascada cuadra al centavo.":"NO CUADRA — revisar."}</div>`;
+  v+=`<div class="note ${cuadra?'ok':'warn'}" style="margin-top:8px">${cuadra?"✓":"⚠"} Entradas (${L(entradas)}) = obligaciones + desarrollo${impTot>0?" + impuestos":""} + ganancia + reserva (${L(salidas)}). ${cuadra?"La cascada cuadra al centavo.":"NO CUADRA — revisar."}</div>`;
   // control: la caja operativa cierra en 0 cada año (el ahorro pasa a la reserva)
   const maxCaja = M.anual.reduce((mx,a)=>Math.max(mx, Math.abs(a.cajaFin||0)), 0);
   const cajaCero = maxCaja < 2;
@@ -3183,7 +3501,7 @@ function setPMVars(){
   const heredCuota = Math.max(0, cv.m||0);
   const heredMeses = Math.max(0, Math.round(cv.k||0));
   let yaHecho=0;
-  if(Array.isArray(desarrollo)) desarrollo.forEach((d,i)=>{ const p=Math.min(100,Math.max(0,pmDesaPct[i]||0)); yaHecho += (d.monto||0)*p/100; });
+  if(Array.isArray(desarrollo)) desarrollo.forEach((d,i)=>{ const p=Math.min(100,Math.max(0,pmDesaPct[i]||0)); yaHecho += desaEfectivo(d)*p/100; });
   window.PM_favorVendedor  = yaHecho;                 // a favor del dueño = desarrollo ya hecho (bloque 3)
   window.PM_favorComprador = C*favorPct/100;          // a tu favor = lo que el dueño ya cobró (bloque 2) × %
   window.PM_pctVendido     = pVend;
@@ -3202,7 +3520,7 @@ function renderPMDesa(){
   const aligned=[]; for(let i=0;i<n;i++) aligned[i]=pmDesaPct[i]||0; pmDesaPct=aligned;
   if(n===0){ c.innerHTML=`<div style="font-size:11.5px;color:var(--faint)">Aún no hay rubros de desarrollo (Módulo 3).</div>`; return; }
   c.innerHTML = desarrollo.map((d,i)=>{
-    const monto=d.monto||0, pct=Math.min(100,Math.max(0,pmDesaPct[i]||0)), falta=monto*(1-pct/100);
+    const monto=desaEfectivo(d), pct=Math.min(100,Math.max(0,pmDesaPct[i]||0)), falta=monto*(1-pct/100);
     return `<div style="display:flex;align-items:center;gap:5px;margin-top:3px">
       <div style="flex:1;min-width:0;font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(d.nombre||'(rubro)')} <span style="color:var(--faint);font-size:9.5px">L ${monto.toLocaleString('es-HN')}</span></div>
       <input type="number" value="${pct}" oninput="onPMDesaPct(${i},this.value)" style="max-width:42px;padding:2px 4px" title="% ya hecho"><span style="font-size:10px;color:var(--faint)">%</span>
@@ -3225,7 +3543,7 @@ function renderPMDisplay(){
   if(typeof pmCarteraRender==='function') pmCarteraRender();
   const _cv=(window._pmCartera||{v:{}}).v||{};
   const hered=window.PM_heredCuota||0, hm=window.PM_heredMeses||0, restaT=_cv.T||0;
-  let totDesa=0; if(Array.isArray(desarrollo)) totDesa=desarrollo.reduce((a,d)=>a+(d.monto||0),0);
+  let totDesa=0; if(Array.isArray(desarrollo)) totDesa=desarrollo.reduce((a,d)=>a+desaEfectivo(d),0);
   if($("pmDesaHecho")) $("pmDesaHecho").textContent = L(yaHecho);
   if($("pmDesaFalta")) $("pmDesaFalta").textContent = L(Math.max(0,totDesa-yaHecho));
   const c=$("pmVerif");
@@ -3261,6 +3579,11 @@ function gatherState(){
     comisionModo, comPct:num("comPct"), comFijo:num("comFijo"),
     opexRubros, opexEscritura:num("opexEscritura"), opexConting:num("opexConting"),
     segMedico:num("segMedico"), segRapVol:num("segRapVol"), segMedAnio:num("segMedAnio"), segRapAnio:num("segRapAnio"),
+    // impuestos (panel de la contadora)
+    isrOn:($("isrOn")?$("isrOn").checked:true), isrPct:num("isrPct"), isrSolPct:num("isrSolPct"), isrUmbral:num("isrUmbral"),
+    impBaseMode, ianOn:($("ianOn")?$("ianOn").checked:false), ianPct:num("ianPct"), ianBase:num("ianBase"),
+    deducibles:deducibles.map(d=>({nombre:d.nombre||'',tipo:d.tipo||'monto',valor:d.valor||0,base:d.base||'ganancia'})),
+    impuestosAdic:impuestosAdic.map(t=>({nombre:t.nombre||'',pct:t.pct||0,base:t.base||'ingresos'})),
     // módulo 6 (proyección)
     proyAhorro:num("proyAhorro"), duenoPctOv, ahorroPctOv, desPctBase, desPctOv,
     // módulo extra: proyecto en marcha
@@ -3300,10 +3623,12 @@ function blankState(){
     opexRubros:[
       {nombre:"Energía eléctrica",monto:0},{nombre:"Internet / teléfono",monto:0},
       {nombre:"Oficina / alquiler",monto:0},{nombre:"Mantenimiento",monto:0},
-      {nombre:"Publicidad",monto:0},{nombre:"Impuestos",monto:0}
+      {nombre:"Publicidad",monto:0},{nombre:"Trámites / papelería",monto:0}
     ],
     opexEscritura:0, opexConting:0,
     segMedico:0, segRapVol:0, segMedAnio:0, segRapAnio:0,
+    isrOn:true, isrPct:25, isrSolPct:5, isrUmbral:1000000,
+    impBaseMode:'utilidad', ianOn:false, ianPct:1, ianBase:0, deducibles:[], impuestosAdic:[],
     proyAhorro:0, duenoPctOv:{}, ahorroPctOv:{}, desPctBase:100, desPctOv:{},
     pmOn:false, pmFavorPct:100, pmc:{}, pmDesaPct:[]
   };
@@ -3385,6 +3710,18 @@ function applyState(d){
     if($("segRapVol")) $("segRapVol").value = (d.segRapVol!=null) ? d.segRapVol : 0;
     if($("segMedAnio")) $("segMedAnio").value = (d.segMedAnio!=null) ? d.segMedAnio : (d.segAnio!=null ? d.segAnio : 0);   // migra: año compartido → cada elemento
     if($("segRapAnio")) $("segRapAnio").value = (d.segRapAnio!=null) ? d.segRapAnio : (d.segAnio!=null ? d.segAnio : 0);
+    // impuestos (panel de la contadora) — escenarios viejos no traen estos campos: ISR activo por defecto con tasas estándar
+    if($("isrOn")) $("isrOn").checked = (d.isrOn!=null) ? !!d.isrOn : true;
+    if($("isrPct")) $("isrPct").value = (d.isrPct!=null) ? d.isrPct : 25;
+    if($("isrSolPct")) $("isrSolPct").value = (d.isrSolPct!=null) ? d.isrSolPct : 5;
+    if($("isrUmbral")) $("isrUmbral").value = (d.isrUmbral!=null) ? d.isrUmbral : 1000000;
+    setBaseMode(d.impBaseMode==='repartido' ? 'repartido' : 'utilidad');
+    if($("ianOn")) $("ianOn").checked = !!d.ianOn;
+    if($("ianPct")) $("ianPct").value = (d.ianPct!=null) ? d.ianPct : 1;
+    if($("ianBase")) $("ianBase").value = (d.ianBase!=null) ? d.ianBase : 0;
+    deducibles = Array.isArray(d.deducibles) ? d.deducibles.map(x=>({nombre:x.nombre||'',tipo:(x.tipo==='pct'?'pct':'monto'),valor:x.valor||0,base:(x.base==='ingresos'?'ingresos':'ganancia')})) : [];
+    impuestosAdic = Array.isArray(d.impuestosAdic) ? d.impuestosAdic.map(x=>({nombre:x.nombre||'',pct:x.pct||0,base:(x.base==='ingresos'?'ingresos':(x.base==='activo'?'activo':'ganancia'))})) : [];
+    renderDeducibles(); renderImpuestosAdic();
     // módulo 6 (proyección)
     if(d.proyAhorro!=null && $("proyAhorro")) $("proyAhorro").value=d.proyAhorro;
     duenoPctOv = (d.duenoPctOv && typeof d.duenoPctOv==='object') ? d.duenoPctOv : {};
