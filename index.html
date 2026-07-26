@@ -50,6 +50,45 @@
   .tabnav button.on{color:var(--teal);border-bottom-color:var(--teal);background:var(--teal-soft);font-weight:700}
   .tabnav button:hover:not(.on){color:var(--ink);background:var(--surface-2)}
   .tabpane{display:none} .tabpane.on{display:block}
+  /* ---- Impresión / PDF: solo el Resumen de proyección ---- */
+  @media print{
+    @page{ size:A4 portrait; margin:12mm }
+    html,body{ background:#fff !important }
+    .noprint,header,.tabbar{ display:none !important }
+    main{ padding:0 !important; margin:0 !important; max-width:none !important }
+    .tabpane{ display:none !important }
+    #tab-resumen{ display:block !important }
+    #tab-resumen>div{ max-width:none !important; margin:0 !important }
+    #compOv{ display:none !important }
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important }
+    .rp-sec,.rp-hero,.rp-kpi,.rp-tl{ break-inside:avoid }
+    /* al exportar la COMPARATIVA: se imprime el overlay y se oculta el resumen normal */
+    body.print-comp #tab-resumen{ display:none !important }
+    body.print-comp #compOv{ display:block !important; position:static !important; background:#fff !important; padding:0 !important; overflow:visible !important }
+    body.print-comp #compOv>div{ box-shadow:none !important; max-width:none !important; border-radius:0 !important }
+    body.print-comp #compResultado table{ break-inside:auto }
+  }
+  /* ---- Resumen de proyección (ejecutivo) ---- */
+  .rp-doc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px 30px}
+  .rp-title{font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.1}
+  .rp-sub{font-size:11.5px;color:var(--faint);margin-top:3px}
+  .rp-hero{display:flex;flex-wrap:wrap;gap:13px;margin:20px 0 4px}
+  .rp-kpi{flex:1 1 175px;border:1px solid var(--line-2);border-radius:11px;padding:13px 15px;background:var(--surface-2)}
+  .rp-kpi .lab{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700}
+  .rp-kpi .val{font-size:23px;font-weight:800;font-family:var(--mono);margin-top:4px;line-height:1.05}
+  .rp-kpi .sub{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .rp-sec{margin-top:20px;padding-top:15px;border-top:1px solid var(--line-2)}
+  .rp-sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+  .rp-sec-n{width:21px;height:21px;border-radius:50%;background:var(--teal);color:#fff;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rp-sec-t{font-size:14px;font-weight:700;color:var(--ink)}
+  .rp-row{display:flex;flex-wrap:wrap;gap:12px 30px;align-items:flex-end}
+  .rp-item .l{font-size:11px;color:var(--muted);margin-bottom:1px}
+  .rp-item .v{font-size:16px;font-weight:700;font-family:var(--mono);color:var(--ink);line-height:1.1}
+  .rp-item.big .v{font-size:20px;color:var(--teal)}
+  .rp-tl{display:flex;flex-wrap:wrap;gap:9px}
+  .rp-tl-i{flex:1 1 150px;border:1px solid var(--line-2);border-radius:9px;padding:8px 11px;background:var(--surface-2)}
+  .rp-tl-i .l{font-size:10.5px;color:var(--muted)}
+  .rp-tl-i .v{font-size:14px;font-weight:700;color:var(--ink);font-family:var(--mono);margin-top:1px}
 
   .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 11px;margin-bottom:10px;min-width:0}
   .card h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);display:flex;align-items:center;gap:8px;margin:0 0 10px}
@@ -195,7 +234,7 @@
   </div>
 </header>
 
-<div style="background:#0B1512;color:#8FA69E;padding:3px 18px;font-size:12px">
+<div class="noprint" style="background:#0B1512;color:#8FA69E;padding:3px 18px;font-size:12px">
   <div style="max-width:1500px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
     <span style="color:#5E7269">Usuario:</span>
     <strong id="curUser" style="color:#EAF1EE">—</strong>
@@ -203,6 +242,7 @@
     <span style="color:#5E7269;margin-left:8px">Proyección:</span>
     <select id="scenSel" onchange="openScen(this.value)" style="background:#16211D;color:#EAF1EE;border:1px solid #2A3B35;border-radius:6px;padding:3px 8px;font-family:var(--sans);font-size:12px"></select>
     <button class="btn sm" style="background:transparent;color:#8FA69E;border-color:#2A3B35" onclick="newScen()">+ Nueva</button>
+    <button class="btn sm" style="background:transparent;color:#8FA69E;border-color:#2A3B35" onclick="duplicarScen()" title="Crear un gemelo de esta proyección con otro nombre; luego los editas por separado">⧉ Duplicar</button>
     <button class="btn sm" style="background:transparent;color:#8FA69E;border-color:#2A3B35" onclick="renameScen()">Renombrar</button>
     <button class="btn sm" style="background:transparent;color:#8FA69E;border-color:#2A3B35" onclick="delScen()">Borrar</button>
     <span id="readonlyBadge" style="display:none;background:var(--clay);color:#fff;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700">Solo lectura — es de otra persona</span>
@@ -255,6 +295,7 @@
       <button id="tb-ventas" onclick="setTab('ventas')">4 · Ventas</button>
       <button id="tb-costos" onclick="setTab('costos')">5 · Costos</button>
       <button id="tb-proy" onclick="setTab('proy')">6 · Proyección</button>
+      <button id="tb-resumen" onclick="setTab('resumen')" title="Resumen ejecutivo: los valores macro del proyecto en orden, listo para exportar a PDF">◆ Resumen</button>
       <button id="tb-contable" onclick="setTab('contable')" title="Vista contable: estado de resultados, flujo de fuentes y usos, financiamiento e indicadores">7 · Contable</button>
       <button id="tb-pm" onclick="setTab('pm')" title="Escenario especial: comprar un proyecto ya desarrollado y con clientes">★ Proyecto en marcha</button>
     </nav>
@@ -517,27 +558,51 @@
 
       <section class="card" style="margin-bottom:0">
         <h2><span class="num">3</span> Lotificación</h2>
-        <div class="field" style="border:none;padding:5px 0">
-          <label style="font-size:12.5px">Tamaño de cada lote</label>
-          <div class="ctrl"><input type="number" id="lotTam" value="0" oninput="onLotTam()" style="max-width:100px"><span class="unit">v²</span></div>
+
+        <div style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:9px">
+          <button id="segLotPct" class="segb on" onclick="setLotMode('pct')" style="padding:4px 9px" title="Proyecto nuevo: defines el % de calles y de área verde; el resto se calcula.">Por porcentajes</button>
+          <button id="segLotPlano" class="segb" onclick="setLotMode('plano')" style="padding:4px 9px" title="Proyecto con plano: ingresa áreas y cantidades reales; se enlazan y autocompletan entre sí.">Con plano</button>
         </div>
-        <div class="field" style="border:none;padding:5px 0">
-          <label style="font-size:12.5px">Dimensiones <span class="hint" id="lotDimHint">frente × fondo</span></label>
-          <div class="ctrl" style="gap:5px">
-            <input type="number" id="lotFrente" value="0" oninput="onLotFrente()" style="max-width:62px" title="Frente (m)">
-            <span style="color:var(--faint)">×</span>
-            <input type="number" id="lotFondo" value="0" readonly style="max-width:62px;background:var(--surface-2);color:var(--muted)" title="Fondo (m) — se ajusta solo">
-            <span class="unit">m</span>
+
+        <div id="lotPctWrap">
+          <div class="field" style="border:none;padding:5px 0">
+            <label style="font-size:12.5px">Tamaño de cada lote</label>
+            <div class="ctrl"><input type="number" id="lotTam" value="0" oninput="onLotTam()" style="max-width:100px"><span class="unit">v²</span></div>
+          </div>
+          <div class="field" style="border:none;padding:5px 0">
+            <label style="font-size:12.5px">Dimensiones <span class="hint" id="lotDimHint">frente × fondo</span></label>
+            <div class="ctrl" style="gap:5px">
+              <input type="number" id="lotFrente" value="0" oninput="onLotFrente()" style="max-width:62px" title="Frente (m)">
+              <span style="color:var(--faint)">×</span>
+              <input type="number" id="lotFondo" value="0" readonly style="max-width:62px;background:var(--surface-2);color:var(--muted)" title="Fondo (m) — se ajusta solo">
+              <span class="unit">m</span>
+            </div>
+          </div>
+          <div class="field" style="border:none;padding:5px 0">
+            <label style="font-size:12.5px">Calles</label>
+            <div class="ctrl"><input type="number" id="lotCallesPct" value="0" oninput="calcLotes()" style="max-width:70px"><span class="unit">%</span></div>
+          </div>
+          <div class="field" style="border:none;padding:5px 0">
+            <label style="font-size:12.5px">Área verde / comunal</label>
+            <div class="ctrl"><input type="number" id="lotVerdePct" value="0" oninput="calcLotes()" style="max-width:70px"><span class="unit">%</span></div>
           </div>
         </div>
-        <div class="field" style="border:none;padding:5px 0">
-          <label style="font-size:12.5px">Calles</label>
-          <div class="ctrl"><input type="number" id="lotCallesPct" value="0" oninput="calcLotes()" style="max-width:70px"><span class="unit">%</span></div>
+
+        <div id="lotPlanoWrap" style="display:none">
+          <p id="lotpIntro" style="margin:0 0 8px;font-size:10.5px;color:var(--faint);line-height:1.4">Ingrese los datos que tenga del plano; los demás se <b style="color:var(--teal)">autocompletan</b> (en teal) con el terreno total y las relaciones entre áreas. Al escribir sobre un valor autocompletado, ese valor queda fijado; se advierte si algún dato es inconsistente. Terreno total = <b id="lotpTerr">—</b>.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px">
+            <div class="pmcf"><label>Área vendible</label><div class="ctrl"><input type="number" id="lotpAv" oninput="lotpEdit(this)" style="width:96px"><span class="unit">v²</span><span id="lotpAv_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Área no vendible</label><div class="ctrl"><input type="number" id="lotpAnv" oninput="lotpEdit(this)" style="width:96px"><span class="unit">v²</span><span id="lotpAnv_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>N° de lotes</label><div class="ctrl"><input type="number" id="lotpN" oninput="lotpEdit(this)" style="width:70px"><span id="lotpN_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Tamaño promedio</label><div class="ctrl"><input type="number" id="lotpS" oninput="lotpEdit(this)" style="width:70px"><span class="unit">v²</span><span id="lotpS_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Área de calles</label><div class="ctrl"><input type="number" id="lotpAc" oninput="lotpEdit(this)" style="width:96px"><span class="unit">v²</span><span id="lotpAc_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Área verde / comunal</label><div class="ctrl"><input type="number" id="lotpVe" oninput="lotpEdit(this)" style="width:96px"><span class="unit">v²</span><span id="lotpVe_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Metros lineales de calle</label><div class="ctrl"><input type="number" id="lotpMl" oninput="lotpEdit(this)" style="width:80px"><span class="unit">m</span><span id="lotpMl_h" style="font-size:10px"></span></div></div>
+            <div class="pmcf"><label>Ancho de calles</label><div class="ctrl"><input type="number" id="lotpW" oninput="lotpEdit(this)" style="width:60px"><span class="unit">m</span><span id="lotpW_h" style="font-size:10px"></span></div></div>
+          </div>
+          <div id="lotpBanner" style="margin-top:8px"></div>
         </div>
-        <div class="field" style="border:none;padding:5px 0">
-          <label style="font-size:12.5px">Área verde / comunal</label>
-          <div class="ctrl"><input type="number" id="lotVerdePct" value="0" oninput="calcLotes()" style="max-width:70px"><span class="unit">%</span></div>
-        </div>
+
         <div style="margin-top:6px;background:var(--surface-2);border-radius:8px;padding:8px 12px">
           <div class="result" style="padding:3px 0;border-bottom:none"><span class="lab" style="font-size:12px">Terreno total</span><span class="val" style="font-size:13px" id="rLotTerrTotal">—</span></div>
         </div>
@@ -665,9 +730,9 @@
         <h2><span class="num">5</span> Salarios y planilla</h2>
         <p style="margin:0 0 8px;font-size:11.5px;color:var(--muted)">Sueldos de empleados y socios. El aguinaldo (13vo) se paga en <strong>diciembre</strong> y el 14vo mes en <strong>julio</strong>.</p>
         <div class="tbl-wrap"><table class="tbl-salarios">
-          <thead><tr><th>Persona</th><th>Sueldo/mes</th><th>Viáticos/mes</th><th title="Desde qué mes se empieza a pagar este sueldo">Inicio<br><span style="font-weight:400;color:var(--faint);font-size:9px">mes</span></th><th></th></tr></thead>
+          <thead><tr><th>Persona</th><th>Sueldo/mes</th><th>Viáticos/mes</th><th title="Desde qué mes se empieza a pagar este sueldo">Inicio<br><span style="font-weight:400;color:var(--faint);font-size:9px">mes</span></th><th title="Si esta persona es un socio, enlázala para que su sueldo cuente como beneficio de ese socio en el Resumen">¿Socio?</th><th></th></tr></thead>
           <tbody id="salBody"></tbody>
-          <tfoot><tr><td>Totales</td><td id="tSalSueldo"></td><td id="tSalViat"></td><td></td></tr></tfoot>
+          <tfoot><tr><td>Totales</td><td id="tSalSueldo"></td><td id="tSalViat"></td><td></td><td></td><td></td></tr></tfoot>
         </table></div>
         <button class="btn sm" onclick="addSalario()">+ Agregar persona</button>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
@@ -925,6 +990,56 @@
     </div>
   </div>
 
+  <!-- ===== MÓDULO: RESUMEN DE PROYECCIÓN (ejecutivo · exportable a PDF) ===== -->
+  <div id="tab-resumen" class="tabpane">
+    <div style="max-width:1000px;margin:0 auto">
+      <div class="noprint" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+          <button id="segResNormal" class="segb on" onclick="setResumenDetalle('normal')" style="padding:5px 13px" title="Los valores macro del proyecto, en una página">Normal</button>
+          <button id="segResDet" class="segb" onclick="setResumenDetalle('detallado')" style="padding:5px 13px" title="Agrega el desglose por socio, precios por vara, beneficios y gráficas">Detallado</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button onclick="abrirComparador()" title="Comparar esta proyección con otras (tabla lado a lado)" style="background:var(--surface);color:var(--teal);border:1px solid var(--teal);border-radius:8px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--sans)">⊞ Comparar proyectos</button>
+          <button onclick="exportarResumenPDF()" style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:8px;padding:8px 15px;font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--sans)">⤓ Exportar PDF</button>
+        </div>
+      </div>
+      <div id="resumenProy"></div>
+    </div>
+  </div>
+
+  <!-- ===== COMPARADOR DE PROYECCIONES (overlay) ===== -->
+  <div id="compOv" style="display:none;position:fixed;inset:0;background:rgba(10,20,17,.55);z-index:80;align-items:flex-start;justify-content:center;overflow:auto;padding:26px 14px">
+    <div style="background:var(--surface);border-radius:14px;max-width:1080px;width:100%;box-shadow:0 18px 60px rgba(0,0,0,.3)">
+      <div class="noprint" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid var(--line-2)">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--ink)">Comparar proyecciones</div>
+          <div style="font-size:11px;color:var(--faint)">Elige las proyecciones y el nivel de detalle. Se calcula cada una y se muestran lado a lado.</div>
+        </div>
+        <button onclick="cerrarComparador()" style="background:none;border:none;font-size:22px;color:var(--faint);cursor:pointer;line-height:1;padding:2px 6px">×</button>
+      </div>
+      <div class="noprint" style="padding:13px 20px;border-bottom:1px solid var(--line-2)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px">
+          <div style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+            <button id="segCmpFull" class="segb on" onclick="setCompModo('full')" style="padding:5px 12px" title="Todas las filas de comparación">Completa</button>
+            <button id="segCmpMini" class="segb" onclick="setCompModo('mini')" style="padding:5px 12px" title="Solo las cifras clave">Resumida</button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="marcarTodasComp(true)" class="btn sm" style="padding:4px 10px">Todas</button>
+            <button onclick="marcarTodasComp(false)" class="btn sm" style="padding:4px 10px">Ninguna</button>
+          </div>
+        </div>
+        <div id="compLista" style="display:flex;flex-wrap:wrap;gap:6px 16px;max-height:120px;overflow:auto"></div>
+      </div>
+      <div style="padding:6px 20px 18px">
+        <div class="noprint" style="display:flex;justify-content:flex-end;gap:10px;margin:10px 0">
+          <button id="btnCompCalc" onclick="correrComparativa()" style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:8px;padding:8px 16px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:var(--sans)">Generar comparativa</button>
+          <button onclick="exportarComparativaPDF()" style="background:var(--surface);color:var(--teal);border:1px solid var(--teal);border-radius:8px;padding:8px 15px;font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--sans)">⤓ PDF</button>
+        </div>
+        <div id="compResultado"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MÓDULO 7: RESUMEN CONTABLE (para la contadora) ===== -->
   <div id="tab-contable" class="tabpane">
     <div class="grid2" style="grid-template-columns:1fr">
@@ -1050,7 +1165,7 @@ const N=n=>Math.round(n).toLocaleString("es-HN");
 const N1=n=>(Math.round(n*10)/10).toLocaleString("es-HN");
 
 function setTab(t){
-  ['sociedad','terreno','lotes','ventas','costos','proy','contable','pm'].forEach(n=>{
+  ['sociedad','terreno','lotes','ventas','costos','proy','resumen','contable','pm'].forEach(n=>{
     const tp=$("tab-"+n), tb=$("tb-"+n); if(tp) tp.classList.toggle("on",n===t); if(tb) tb.classList.toggle("on",n===t);
   });
   $("kpiSociedad").style.display = t==='sociedad'?'grid':'none';
@@ -1060,7 +1175,7 @@ function setTab(t){
   $("kpiCostos").style.display = t==='costos'?'grid':'none';
   $("kpiProy").style.display = (t==='proy'||t==='contable')?'grid':'none';
   if(t==='costos' && typeof calcCostos==='function') calcCostos();
-  if((t==='proy'||t==='contable') && typeof calcProyeccion==='function') calcProyeccion();
+  if((t==='proy'||t==='contable'||t==='resumen') && typeof calcProyeccion==='function') calcProyeccion();
   if(t==='pm' && typeof calcPM==='function') calcPM();
 }
 
@@ -1270,6 +1385,8 @@ function renderSoc(){
       <td><button class="rowdel" onclick="delSoc(${i})" title="Quitar">×</button></td>`;
     b.appendChild(tr);
   });
+  // mantener al día los enlaces "¿Socio?" de la planilla (sin robar el foco si el usuario está escribiendo ahí)
+  if(typeof renderSalarios==='function'){ const f=document.activeElement; if(!(f&&f.closest&&f.closest('#salBody'))) renderSalarios(); }
 }
 function updSoc(i,k,v,tipo){
   socios[i][k] = tipo==='txt' ? v : (tipo==='chk' ? v : (parseFloat(v)||0));
@@ -1277,7 +1394,10 @@ function updSoc(i,k,v,tipo){
   calc();
 }
 function addSoc(){ socios.push({nombre:"Socio "+(socios.length+1), aporte:0, prestamo:false, tasa:0, plazoBanco:36, part:0}); renderSoc(); calc(); }
-function delSoc(i){ if(socios.length<=1) return; socios.splice(i,1); renderSoc(); calc(); }
+function delSoc(i){ if(socios.length<=1) return; socios.splice(i,1);
+  // reindexar los enlaces "¿Socio?" de la planilla: el borrado se desvincula; los de índice mayor bajan uno
+  if(Array.isArray(salarios)) salarios.forEach(s=>{ if(Number.isInteger(s.socio)){ if(s.socio===i) s.socio=-1; else if(s.socio>i) s.socio--; } });
+  renderSoc(); calc(); }
 
 // cuota de préstamo amortizado (sistema francés): el interés se cobra sobre el saldo pendiente
 function cuotaAmort(capital, tasaAnualPct, meses){
@@ -1763,8 +1883,9 @@ const REF = {
 // Geometría del bloque para estimar metros de calle (norma: cuadra de 100-150 m).
 const LOTES_POR_CARA = 12;   // lotes por cara de bloque (~120 m con frentes de 10 m)
 
-// metros lineales de calle, estimados desde los frentes de lote
+// metros lineales de calle, estimados desde los frentes de lote (modo %) o tomados del dato (modo plano)
 function metrosCalle(){
+  if(typeof lotMode!=='undefined' && lotMode==='plano'){ const v=(window._lotPlano&&window._lotPlano.v)||{}; return (v.ml>0)?v.ml:0; }
   const lotes = window.M3_lotesCant||0;
   const frente = window.M3_lotFrente||0;
   const fondo = window.M3_lotFondo||0;
@@ -1903,18 +2024,157 @@ function actualizarFondo(){
   if($("lotDimHint")) $("lotDimHint").textContent = m2>0 ? `mantiene ${N(num("lotTam"))} v²` : "frente × fondo";
 }
 
+/* ===== MÓDULO 3 · MODO DE INGRESO =====================================
+   'pct'   = proyecto NUEVO: defines % de calles y % de área verde; se calculan las áreas y los lotes.
+   'plano' = proyecto CON PLANO: ingresas áreas y cantidades reales; se enlazan y autocompletan entre sí
+             igual que la cartera de "proyecto en marcha" (llenas lo que tengas y el resto se deduce; si
+             un dato choca con lo que implican los demás, se avisa).
+   Identidades del modo plano (T = terreno total del Módulo 2, ancla de solo lectura):
+     (g1) Av + Anv = T          área vendible + área no vendible = terreno total
+     (g2) n · s   = Av          n° de lotes × tamaño promedio = área vendible
+     (g3) Ac + Ve = Anv         área de calles + área verde = área no vendible
+     (g4) Ac · K  = ml · w      área de calles (v²) × K = metros lineales × ancho (m²)   [K = m² por v²]
+======================================================================= */
+let lotMode='pct';
+function setLotMode(m){
+  lotMode = (m==='plano') ? 'plano' : 'pct';
+  const esPlano = lotMode==='plano';
+  if($("lotPctWrap"))   $("lotPctWrap").style.display   = esPlano?'none':'';
+  if($("lotPlanoWrap")) $("lotPlanoWrap").style.display = esPlano?'':'none';
+  if($("segLotPct"))   $("segLotPct").classList.toggle('on', !esPlano);
+  if($("segLotPlano")) $("segLotPlano").classList.toggle('on', esPlano);
+  calcLotes();
+}
+// lee SOLO lo que puso el usuario (ignora casillas auto-rellenadas). Un 0/negativo = "no lo llené".
+function lotpRead(){
+  const g=id=>{ const el=$(id); if(!el || el.dataset.auto==='1') return null;
+    const s=(el.value||'').trim(); if(s==='') return null; const x=parseFloat(s);
+    return (isFinite(x)&&x>0)?x:null; };
+  return { Av:g('lotpAv'), Anv:g('lotpAnv'), n:g('lotpN'), s:g('lotpS'), Ac:g('lotpAc'), Ve:g('lotpVe'), ml:g('lotpMl'), w:g('lotpW') };
+}
+// guarda SOLO lo que puso el usuario (lo auto-rellenado se re-deduce al cargar)
+function lotpGather(){ const g=id=>{ const el=$(id); return (el && el.dataset.auto!=='1') ? el.value : ''; };
+  return { Av:g('lotpAv'), Anv:g('lotpAnv'), n:g('lotpN'), s:g('lotpS'), Ac:g('lotpAc'), Ve:g('lotpVe'), ml:g('lotpMl'), w:g('lotpW') }; }
+let lotpSeq=0; const lotpOrder={};
+const LOTP_VAR2ID={Av:'lotpAv',Anv:'lotpAnv',n:'lotpN',s:'lotpS',Ac:'lotpAc',Ve:'lotpVe',ml:'lotpMl',w:'lotpW'};
+// el usuario editó una casilla: deja de ser 'auto' (pasa a dato tuyo, y el más reciente) y recalcula
+function lotpEdit(el){
+  if(el && el.dataset){ el.dataset.auto=''; lotpOrder[el.id]= ++lotpSeq; }
+  calcLotes();
+}
+// prioridad de liberación (mayor = se suelta primero): metros/ancho (lo más estimado) → calles/verde → datos duros (áreas, n°, tamaño)
+const LOTP_PRIO={ ml:3, w:3, Ac:2, Ve:2, Av:1, Anv:1, n:1, s:1 };
+function gSane(v){
+  for(const key in v){ const x=v[key]; if(x==null||!isFinite(x)) continue; if(x < -1) return false; }
+  return true;
+}
+function lotpSolve(input){
+  const T = window.M2_terrTamV2||0;   // ancla: terreno total (Módulo 2)
+  const K = V2_A_M2;                   // m² por v²
+  const v={}, isU={};
+  for(const kk in input){ if(input[kk]!=null && isFinite(input[kk])){ v[kk]=input[kk]; isU[kk]=true; } }
+  const conflicts=[];
+  const tol=(a,b)=>Math.abs(a-b)<=Math.max(1,Math.abs(b)*0.015);
+  const H=x=>v[x]!=null&&isFinite(v[x]);
+  const put=(x,val,eq)=>{ if(!isFinite(val)) return false; if(!H(x)){ v[x]=val; return true; } if(!tol(v[x],val) && !conflicts.some(c=>c.eq===eq)) conflicts.push({v:x,eq}); return false; };
+  for(let it=0; it<16; it++){
+    let ch=false;
+    if(T>0){ if(H('Anv')) ch=put('Av',T-v.Anv,'g1')||ch; if(H('Av')) ch=put('Anv',T-v.Av,'g1')||ch; }   // g1
+    if(H('n')&&H('s')) ch=put('Av',v.n*v.s,'g2')||ch;                                                    // g2
+    if(H('Av')&&H('s')&&v.s>0) ch=put('n',v.Av/v.s,'g2')||ch;
+    if(H('Av')&&H('n')&&v.n>0) ch=put('s',v.Av/v.n,'g2')||ch;
+    if(H('Ac')&&H('Ve')) ch=put('Anv',v.Ac+v.Ve,'g3')||ch;                                               // g3
+    if(H('Anv')&&H('Ve')) ch=put('Ac',v.Anv-v.Ve,'g3')||ch;
+    if(H('Anv')&&H('Ac')) ch=put('Ve',v.Anv-v.Ac,'g3')||ch;
+    if(H('ml')&&H('w')) ch=put('Ac',v.ml*v.w/K,'g4')||ch;                                                // g4
+    if(H('Ac')&&H('w')&&v.w>0) ch=put('ml',v.Ac*K/v.w,'g4')||ch;
+    if(H('Ac')&&H('ml')&&v.ml>0) ch=put('w',v.Ac*K/v.ml,'g4')||ch;
+    if(!ch) break;
+  }
+  return {v, isU, conflicts, T};
+}
+// Cascada "tu último cambio manda": si sobre-especificas (dos datos que se contradicen), se SUELTA un pin
+// (vuelve a "auto") hasta que todo cuadre; se suelta por PRIORIDAD (lo más estimado primero) y, dentro del
+// grupo, el MÁS VIEJO. Nunca se acepta una liberación que deje un valor absurdo (negativo).
+function lotpSolveAuto(){
+  let input = lotpRead();
+  const released=[];
+  for(let guard=0; guard<12; guard++){
+    const sol = lotpSolve(input);
+    if(!sol.conflicts.length){ sol.released=released; return sol; }
+    const pins = Object.keys(input).filter(k=> input[k]!=null && isFinite(input[k]));
+    pins.sort((a,b)=> ((LOTP_PRIO[b]||1)-(LOTP_PRIO[a]||1)) || ((lotpOrder[LOTP_VAR2ID[a]]||0)-(lotpOrder[LOTP_VAR2ID[b]]||0)));
+    let did=false;
+    for(const pin of pins){
+      const trial = Object.assign({}, input); trial[pin]=null;
+      const st = lotpSolve(trial);
+      const rederived = st.v[pin]!=null && isFinite(st.v[pin]);
+      if(rederived && st.conflicts.length < sol.conflicts.length && gSane(st.v)){
+        input=trial; released.push(pin); did=true; break;
+      }
+    }
+    if(!did){ sol.released=released; return sol; }
+  }
+  const fin = lotpSolve(input); fin.released=released; return fin;
+}
+function lotpRender(){
+  const b0=$("lotpBanner");
+  if(lotMode!=='plano'){ if(b0) b0.innerHTML=''; return; }   // en modo % este render no aplica (el bloque está oculto)
+  const terrEl=$("lotpTerr"); if(terrEl) terrEl.textContent = (window.M2_terrTamV2>0)? (Math.round(window.M2_terrTamV2).toLocaleString('es-HN')+' v²') : '— (llena el Módulo 2)';
+  const sol = window._lotPlano || lotpSolveAuto();
+  const v=sol.v, isU=sol.isU||{};
+  const fPlain=(x,dec)=> (x==null||!isFinite(x))?'' : (dec? (Math.round(x*10)/10) : Math.round(x));
+  // AUTO-LLENADO: las casillas que NO llenó el usuario se rellenan con el valor derivado (cursiva teal, marcadas 'auto')
+  const fill=(id,x,dec)=>{ const el=$(id), h=$(id+'_h'); if(!el) return;
+    if(isU[x]){ el.dataset.auto=''; el.style.color=''; el.style.fontStyle=''; if(h){ h.textContent='✓'; h.style.color='var(--faint)'; } return; }
+    if(lotMode==='plano' && v[x]!=null && isFinite(v[x]) && el!==document.activeElement){
+      el.value=fPlain(v[x],dec); el.dataset.auto='1'; el.style.color='var(--teal)'; el.style.fontStyle='italic';
+      if(h){ h.textContent='auto'; h.style.color='var(--teal)'; }
+    } else if(el.dataset.auto==='1' && el!==document.activeElement){
+      el.value=''; el.dataset.auto=''; el.style.color=''; el.style.fontStyle=''; if(h) h.textContent='';
+    } else if(el.dataset.auto!=='1' && h){ h.textContent=''; }
+  };
+  fill('lotpAv','Av'); fill('lotpAnv','Anv'); fill('lotpN','n'); fill('lotpS','s',true); fill('lotpAc','Ac'); fill('lotpVe','Ve'); fill('lotpMl','ml'); fill('lotpW','w',true);
+  const b=$("lotpBanner"); if(!b) return;
+  if(lotMode!=='plano'){ b.innerHTML=''; return; }
+  const neg = ['Av','Anv','Ac','Ve'].some(k=> v[k]!=null && isFinite(v[k]) && v[k] < -1);
+  if(sol.conflicts.length){
+    const nm={g1:'vendible + no vendible = terreno total', g2:'n° de lotes × tamaño = área vendible', g3:'calles + área verde = área no vendible', g4:'área de calles = metros lineales × ancho'};
+    const seen=new Set(), items=[]; sol.conflicts.forEach(c=>{ if(!seen.has(c.eq)){ seen.add(c.eq); items.push(nm[c.eq]||c.eq); } });
+    b.innerHTML=`<div class="note warn" style="margin:0">⚠ Inconsistencia: ${items.join('; ')}. Uno de estos datos implica un valor distinto al del resto; revise las cifras.</div>`;
+  } else if(neg){
+    b.innerHTML=`<div class="note warn" style="margin:0">⚠ Algún área queda en negativo: revise que el área vendible y la no vendible no superen el terreno total (${(window.M2_terrTamV2>0?Math.round(window.M2_terrTamV2).toLocaleString('es-HN')+' v²':'aún sin definir')}).</div>`;
+  } else {
+    const falta=[]; if(v.Av==null) falta.push('área vendible'); if(v.n==null) falta.push('n° de lotes'); if(v.s==null) falta.push('tamaño promedio');
+    if(falta.length) b.innerHTML=`<div class="note" style="margin:0">✓ Datos consistentes. Falta para completar: ${falta.join(', ')}.</div>`;
+    else b.innerHTML=`<div class="note ok" style="margin:0">✓ Datos consistentes. ${N(v.n)} lotes de ~${N1(v.s)} v² · vendible ${N(v.Av)} v²${v.Ac!=null?' · calles '+N(v.Ac)+' v²':''}${v.ml!=null?' ('+N(v.ml)+' m lineales)':''}.</div>`;
+  }
+}
+
 function calcLotes(){
   const terrTotal = window.M2_terrTamV2 || 0;   // área del terreno, del módulo 2 (solo lectura)
-  const lotTam = num("lotTam");
-  const callesPct = num("lotCallesPct");
-  const verdePct = num("lotVerdePct");
-
-  const areaCalles = terrTotal * callesPct/100;
-  const areaVerde  = terrTotal * verdePct/100;
-  const vendible = Math.max(0, terrTotal - areaCalles - areaVerde);
-
-  // lotes de tamaño fijo: cuántos caben (redondeo hacia abajo)
-  const cant = lotTam>0 ? Math.floor(vendible / lotTam) : 0;
+  let lotTam, callesPct, verdePct, areaCalles, areaVerde, vendible, cant;
+  let planoMlDirecto=null;   // en modo plano, los metros lineales son un dato (no el estimado geométrico)
+  if(lotMode==='plano'){
+    const sol = lotpSolveAuto(); window._lotPlano = sol; const v=sol.v;
+    vendible   = Math.max(0, v.Av||0);
+    cant       = Math.max(0, Math.round(v.n||0));
+    lotTam     = Math.max(0, v.s||0);
+    areaCalles = Math.max(0, v.Ac||0);
+    areaVerde  = Math.max(0, v.Ve||0);
+    planoMlDirecto = Math.max(0, v.ml||0);
+    callesPct = terrTotal>0 ? areaCalles/terrTotal*100 : 0;
+    verdePct  = terrTotal>0 ? areaVerde /terrTotal*100 : 0;
+  }else{
+    window._lotPlano = null;
+    lotTam    = num("lotTam");
+    callesPct = num("lotCallesPct");
+    verdePct  = num("lotVerdePct");
+    areaCalles = terrTotal * callesPct/100;
+    areaVerde  = terrTotal * verdePct/100;
+    vendible   = Math.max(0, terrTotal - areaCalles - areaVerde);
+    cant = lotTam>0 ? Math.floor(vendible / lotTam) : 0;   // lotes de tamaño fijo: cuántos caben (hacia abajo)
+  }
   const areaUsada = cant * lotTam;
   const sobra = Math.max(0, vendible - areaUsada);
 
@@ -1924,14 +2184,22 @@ function calcLotes(){
   window.M3_lotTam = lotTam;
   window.M3_lotesCant = cant;
   // dimensiones y metros de calle (para los estimados de red)
-  if(!lotFrenteManual && !applyingRemote){   // mantener el frente sugerido al día
-    const f=frenteSugerido();
-    if($("lotFrente") && document.activeElement!==$("lotFrente")) $("lotFrente").value = f>0?f:"";
+  if(lotMode==='plano'){
+    // en modo plano los metros lineales vienen del dato (o se deducen del área de calles); no se estiman por geometría.
+    window.M3_metrosCalle = planoMlDirecto||0;
+    // frente/fondo aproximados desde el tamaño promedio (solo referencia; no afectan cálculos)
+    const m2=lotTam*V2_A_M2; const fr = m2>0? Math.round(Math.sqrt(m2/2)*10)/10 : 0;
+    window.M3_lotFrente = fr; window.M3_lotFondo = (fr>0)? Math.round(m2/fr*10)/10 : 0;
+  }else{
+    if(!lotFrenteManual && !applyingRemote){   // mantener el frente sugerido al día
+      const f=frenteSugerido();
+      if($("lotFrente") && document.activeElement!==$("lotFrente")) $("lotFrente").value = f>0?f:"";
+    }
+    actualizarFondo();
+    window.M3_lotFrente = num("lotFrente");
+    window.M3_lotFondo = num("lotFondo");
+    window.M3_metrosCalle = metrosCalle();
   }
-  actualizarFondo();
-  window.M3_lotFrente = num("lotFrente");
-  window.M3_lotFondo = num("lotFondo");
-  window.M3_metrosCalle = metrosCalle();
 
   // desarrollo: el total es la suma de lo que hay en cada casilla (valores manuales del usuario)
   initDesarrollo();
@@ -1978,8 +2246,16 @@ function calcLotes(){
   // alertas: solo cuando algo no cuadra
   let avisos=[];
   let infos=[];   // avisos informativos (no son errores): guían sin forzar valores
-  if(terrTotal===0){
+  if(terrTotal===0 && !(lotMode==='plano' && vendible>0)){
     avisos.push(`Aún no hay terreno definido. Ingresa el tamaño en el módulo <strong>Compra del terreno</strong>.`);
+  }else if(lotMode==='plano'){
+    // en modo plano la consistencia entre datos se avisa en el banner del solver; aquí sólo faltantes/límites.
+    if(lotTam>0 && vendible>0 && lotTam>vendible){
+      avisos.push(`El <strong>tamaño promedio</strong> (${NV2(lotTam)}) es mayor que toda el área vendible (${NV2(vendible)}). Revise el tamaño o el área.`);
+    }
+    if(vendible>0 && areaCalles<=0 && areaVerde<=0){
+      avisos.push(`Sólo ingresaste <strong>área vendible</strong>: no hay <strong>calles</strong> ni <strong>área verde</strong>. Si el plano las tiene, ingresa esas áreas (o el <strong>área no vendible</strong>) para que el reparto y los estimados de desarrollo cuadren.`);
+    }
   }else{
     if(callesPct+verdePct>=100){
       avisos.push(`Calles (${N1(callesPct)}%) + área verde (${N1(verdePct)}%) suman ${N1(callesPct+verdePct)}%. No queda área para vender.`);
@@ -2002,7 +2278,22 @@ function calcLotes(){
   // verificación
   let v="";
   const row=t=>`<div>${t}</div>`;
-  if(terrTotal===0 || lotTam===0){
+  if(lotMode==='plano'){
+    if(vendible<=0 && cant<=0 && areaCalles<=0){
+      v=row(`Ingresa los datos del plano (área vendible, n° de lotes, tamaño…) para ver el desglose.`);
+    }else{
+      const _w=(window._lotPlano&&window._lotPlano.v&&window._lotPlano.v.w)||0;
+      if(terrTotal>0) v+=row(`<b>Terreno total:</b> ${NV2(terrTotal)}`);
+      v+=row(`<b>Área vendible:</b> ${NV2(vendible)}${(cant>0&&lotTam>0)?` = ${N(cant)} lotes × ${NV2(lotTam)}`:''}`);
+      v+=row(`<b>Área no vendible:</b> ${NV2(Math.max(0,areaCalles+areaVerde))}${(areaCalles>0||areaVerde>0)?` (calles ${NV2(areaCalles)} + verde ${NV2(areaVerde)})`:''}`);
+      if(window.M3_metrosCalle>0) v+=row(`<b>Calles:</b> ${N(window.M3_metrosCalle)} m lineales${_w>0?` × ${N1(_w)} m de ancho`:''}${areaCalles>0?` = ${NV2(areaCalles)}`:''}`);
+      if(terrTotal>0 && vendible>0) v+=row(`<b>Aprovechamiento:</b> ${N1(vendible/terrTotal*100)}% del terreno es vendible`);
+      if(desarrolloTotal>0){
+        v+=row(`<b>Desarrollo:</b> ${desarrollo.filter(d=>desaEfectivo(d)>0).map(d=>`${d.nombre||'rubro'} ${L(desaEfectivo(d))}`).join(" + ")} = <b>${L(desarrolloTotal)}</b>`);
+        if(cant>0) v+=row(`<b>Costo por lote:</b> ${L(desarrolloTotal)} ÷ ${N(cant)} = <b>${L(desarrolloPorLote)}</b>`);
+      }
+    }
+  }else if(terrTotal===0 || lotTam===0){
     v=row(`Define el terreno (módulo 2) y el tamaño del lote para ver los números.`);
   }else{
     v+=row(`<b>Terreno total:</b> ${NV2(terrTotal)}`);
@@ -2018,6 +2309,7 @@ function calcLotes(){
     }
   }
   $("verifLotes").innerHTML=v;
+  if(lotMode==='plano') lotpRender();   // autollenado teal + banner de consistencia del modo plano
   if(typeof calcVentas==='function') calcVentas();   // las ventas dependen del número de lotes
   cloudSave();
 }
@@ -2271,19 +2563,24 @@ function initSalarios(){ if(salarios===null) salarios=[
 ]; }
 function renderSalarios(){
   const b=$("salBody"); if(!b) return; initSalarios(); b.innerHTML="";
+  const socList = (typeof socios!=='undefined'&&Array.isArray(socios)) ? socios : [];
   salarios.forEach((s,i)=>{
+    const si = Number.isInteger(s.socio) ? s.socio : -1;
+    const socOpts = ['<option value="-1">— (empleado)</option>'].concat(
+      socList.map((so,k)=>`<option value="${k}"${si===k?' selected':''}>${(so.nombre||('Socio '+(k+1))).replace(/"/g,'&quot;').slice(0,18)}</option>`)).join('');
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><input type="text" value="${(s.nombre||'').replace(/"/g,'&quot;')}" oninput="updSalario(${i},'nombre',this.value,'txt')" style="min-width:110px;text-align:left"></td>
       <td><input type="number" value="${s.sueldo||0}" oninput="updSalario(${i},'sueldo',this.value)" style="max-width:100px"></td>
       <td><input type="number" value="${s.viaticos||0}" oninput="updSalario(${i},'viaticos',this.value)" style="max-width:100px"></td>
       <td><input type="number" min="1" class="noSpin" value="${Math.max(1,Math.round(s.inicioMes||1))}" oninput="updSalario(${i},'inicioMes',this.value)" style="max-width:52px;text-align:right" title="Desde qué mes se empieza a pagar este sueldo (1 = desde el inicio)"></td>
+      <td><select onchange="updSalario(${i},'socio',this.value,'int')" style="max-width:120px;font-size:11px" title="Enlaza esta línea a un socio para sumar su sueldo y beneficios en el Resumen detallado">${socOpts}</select></td>
       <td style="text-align:center"><button class="rowdel" onclick="delSalario(${i})" title="Quitar">×</button></td>`;
     b.appendChild(tr);
   });
 }
-function updSalario(i,k,v,tipo){ salarios[i][k]= tipo==='txt'?v:(k==='inicioMes'?Math.max(1,Math.round(parseFloat(v)||1)):(parseFloat(v)||0)); calcCostos(); }
-function addSalario(){ initSalarios(); salarios.push({nombre:"", sueldo:0, viaticos:0, inicioMes:1}); renderSalarios(); calcCostos(); }
+function updSalario(i,k,v,tipo){ salarios[i][k]= tipo==='txt'?v:(tipo==='int'?Math.round(parseFloat(v)) : (k==='inicioMes'?Math.max(1,Math.round(parseFloat(v)||1)):(parseFloat(v)||0))); calcCostos(); }
+function addSalario(){ initSalarios(); salarios.push({nombre:"", sueldo:0, viaticos:0, inicioMes:1, socio:-1}); renderSalarios(); calcCostos(); }
 function delSalario(i){ if(salarios.length<=1) return; salarios.splice(i,1); renderSalarios(); calcCostos(); }
 
 // ===== Cargas patronales (IHSS, INFOP, RAP) — se calculan empleado por empleado, con el techo del IHSS =====
@@ -3162,6 +3459,7 @@ function calcProyeccion(){
     if($("proyReparto")) $("proyReparto").innerHTML="";
     if($("proyAviso")) $("proyAviso").innerHTML=`<div class="note" style="margin-bottom:8px">Completa los módulos 1 a 5 (capital, terreno, lotes, precios de venta y costos) para ver la proyección.</div>`;
     if($("verifProy")) $("verifProy").innerHTML="";
+    if($("resumenProy")) $("resumenProy").innerHTML=`<div class="note" style="margin:0">Completa los módulos 1 a 6 (capital, terreno, lotes, precios de venta, costos y proyección) para generar el resumen.</div>`;
     if($("kPrUtil")){ $("kPrUtil").textContent="—"; $("kPrMargen").textContent="—"; $("kPrDesMes").textContent="—"; $("kPrDur").textContent="—"; }
     return;
   }
@@ -3217,6 +3515,7 @@ function calcProyeccion(){
 
   renderProyChart(M);
   renderResumenContable(M);
+  renderResumenProy(M);
   if(typeof actualizarCalcPrestamos==='function') actualizarCalcPrestamos(M);
   renderProyTabla(M);
   renderProyHitos(M);
@@ -3745,6 +4044,336 @@ function renderProyTabla(M){
 }
 function proyToggleAnio(y){ _proyExpandido[y]=!_proyExpandido[y]; if(_proyModel) renderProyTabla(_proyModel); }
 
+/* ============ RESUMEN DE PROYECCIÓN (ejecutivo · macro · exportable a PDF) ============ */
+// nivel de detalle del Resumen (vista, no es dato del proyecto)
+let resumenDetalle='normal';
+function setResumenDetalle(m){
+  resumenDetalle=(m==='detallado')?'detallado':'normal';
+  if($("segResNormal")) $("segResNormal").classList.toggle('on', resumenDetalle==='normal');
+  if($("segResDet")) $("segResDet").classList.toggle('on', resumenDetalle==='detallado');
+  if(typeof _proyModel!=='undefined' && _proyModel) renderResumenProy(_proyModel);
+}
+// beneficios que recibe CADA SOCIO por la planilla enlazada (sueldo + viáticos + aguinaldos), calculados con la
+// misma línea de tiempo del motor (desde el mes de inicio de cada persona hasta los meses de planilla). No incluye
+// las cargas patronales (esas van al IHSS/RAP, no al bolsillo del socio). El "¿Socio?" de cada línea define el enlace.
+function beneficiosPorSocio(){
+  const noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
+  const per=new Array(nSoc).fill(0);
+  const planilla=window.M5_planilla||[];
+  const pm=Math.round(window.M5_planillaMeses||0);
+  const agu=!!window.M5_aguinaldos;
+  const sal=(typeof salarios!=='undefined'&&Array.isArray(salarios))?salarios:[];
+  planilla.forEach((p,i)=>{
+    const si=(sal[i]&&Number.isInteger(sal[i].socio))?sal[i].socio:-1;
+    if(si<0||si>=nSoc) return;
+    for(let m=Math.max(1,p.inicioMes||1); m<=pm; m++){ const cm=((m-1)%12)+1;
+      per[si]+=(p.sueldo||0)+(p.viaticos||0);
+      if(agu&&cm===12) per[si]+=(p.sueldo||0);
+      if(agu&&cm===7)  per[si]+=(p.sueldo||0);
+    }
+  });
+  return per;
+}
+// paleta por socio (consistente entre las gráficas del resumen)
+const SOCIO_COLS=['#0E7C66','#B4541F','#7A5EA8','#2E7DA8','#C99A2E','#34495E','#3E8E7E','#9C6BAF'];
+const _Lc=n=>{ n=Math.round(n||0); const s=n<0?'-':''; n=Math.abs(n); if(n>=1e6) return s+'L '+(n/1e6).toFixed(n%1e6===0?0:1)+'M'; if(n>=1e3) return s+'L '+Math.round(n/1e3)+'k'; return s+'L '+n; };
+function _leyendaSocios(noms){ return `<div style="display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:8px;font-size:10.5px;color:var(--muted)">`+
+  noms.map((nm,i)=>`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${SOCIO_COLS[i%SOCIO_COLS.length]};display:inline-block"></span>${nm||('Socio '+(i+1))}</span>`).join('')+`</div>`; }
+
+// GRÁFICA 1 — ganancias por año (barras apiladas por socio) + acumulado por socio (líneas punteadas)
+function svgGananciasPorAnio(M){
+  const anual=(M&&M.anual)||[]; const parts=window.M1_participaciones||[], noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
+  const years=anual.map(a=>a.y); const ganYear=anual.map(a=>Math.max(0,a.ganancia||0));
+  if(!years.length || nSoc===0 || ganYear.reduce((a,b)=>a+b,0)<=0.5) return `<div style="font-size:11px;color:var(--faint)">Aún no hay ganancias repartidas para graficar.</div>`;
+  const perSocioYear=noms.map((_,si)=> anual.map(a=> Math.max(0,(a.ganancia||0))*(parts[si]||0)/100));
+  const cumSocio=perSocioYear.map(arr=>{ let c=0; return arr.map(v=>c+=v); });
+  const maxBar=Math.max(1,...ganYear); const maxCum=Math.max(1,...cumSocio.map(a=>a[a.length-1]||0)); const maxY=Math.max(maxBar,maxCum);
+  const W=640,H=248, pl=58,pr=14,pt=12,pb=26, iw=W-pl-pr, ih=H-pt-pb, n=years.length;
+  const bw=Math.max(6,Math.min(44, iw/n*0.6)); const xC=i=> pl+iw*(i+0.5)/n; const yV=v=> pt+ih*(1-v/maxY);
+  let grid=''; for(let g=0; g<=4; g++){ const v=maxY*g/4, y=yV(v); grid+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="var(--line-2)" stroke-width="1"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--faint)">${_Lc(v)}</text>`; }
+  let bars=''; years.forEach((y,i)=>{ let acc=0; const x=xC(i)-bw/2;
+    noms.forEach((nm,si)=>{ const v=perSocioYear[si][i]; if(v<=0.5) return; const yy=pt+ih-(acc+v)/maxY*ih; acc+=v;
+      bars+=`<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${(ih*v/maxY).toFixed(1)}" fill="${SOCIO_COLS[si%SOCIO_COLS.length]}" opacity="0.9"><title>${(nm||('Socio '+(si+1)))} · Año ${y}: ${L(v)}</title></rect>`; }); });
+  let lines=''; cumSocio.forEach((arr,si)=>{ const col=SOCIO_COLS[si%SOCIO_COLS.length]; const pts=arr.map((v,i)=>`${xC(i).toFixed(1)},${yV(v).toFixed(1)}`).join(' ');
+    lines+=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="4 3"/>`+arr.map((v,i)=>`<circle cx="${xC(i).toFixed(1)}" cy="${yV(v).toFixed(1)}" r="2.3" fill="${col}"/>`).join(''); });
+  let xlab=''; years.forEach((y,i)=> xlab+=`<text x="${xC(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${y}</text>`);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block" font-family="var(--sans)">${grid}${bars}${lines}${xlab}</svg>
+    <div style="font-size:10px;color:var(--faint);margin-top:4px">Barras: ganancia repartida cada año (apilada por socio). Líneas punteadas: acumulado por socio.</div>${_leyendaSocios(noms)}`;
+}
+
+// GRÁFICA 2 — volumen de venta en el tiempo: lotes NUEVOS vendidos por año + acumulado (marca los pre-vendidos del inicio)
+function svgVentasPorAnio(M){
+  const anual=(M&&M.anual)||[]; const years=anual.map(a=>a.y); const lotesYear=anual.map(a=>Math.max(0,a.lotesVend||0));
+  if(!years.length || lotesYear.reduce((a,b)=>a+b,0)<=0.001) return `<div style="font-size:11px;color:var(--faint)">Aún no hay ventas para graficar.</div>`;
+  const preSold=(window.PM_on)? (window.M3_lotesCant||0)*Math.min(100,Math.max(0,window.PM_pctVendido||0))/100 : 0;
+  let cc=preSold; const cum=lotesYear.map(v=>cc+=v); const maxBar=Math.max(1,...lotesYear); const maxCum=Math.max(1,cum[cum.length-1]||0);
+  const W=640,H=240, pl=46,pr=44,pt=12,pb=26, iw=W-pl-pr, ih=H-pt-pb, n=years.length;
+  const bw=Math.max(6,Math.min(44, iw/n*0.6)); const xC=i=> pl+iw*(i+0.5)/n;
+  const yB=v=> pt+ih*(1-v/maxBar);                 // eje izquierdo: lotes/año
+  const yC=v=> pt+ih*(1-v/maxCum);                 // eje derecho: acumulado
+  let grid=''; for(let g=0; g<=4; g++){ const v=maxBar*g/4, y=yB(v); grid+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="var(--line-2)" stroke-width="1"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--faint)">${N1(v)}</text>`; }
+  let bars=''; years.forEach((y,i)=>{ const v=lotesYear[i]; const x=xC(i)-bw/2; const yy=yB(v);
+    bars+=`<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${(pt+ih-yy).toFixed(1)}" fill="#0E7C66" opacity="0.85"><title>Año ${y}: ${N1(v)} lotes nuevos</title></rect>`; });
+  const cumPts=cum.map((v,i)=>`${xC(i).toFixed(1)},${yC(v).toFixed(1)}`).join(' ');
+  const cumLine=`<polyline points="${cumPts}" fill="none" stroke="#B4541F" stroke-width="2"/>`+cum.map((v,i)=>`<circle cx="${xC(i).toFixed(1)}" cy="${yC(v).toFixed(1)}" r="2.4" fill="#B4541F"><title>Acumulado Año ${years[i]}: ${N1(v)} lotes</title></circle>`).join('');
+  let rlab=''; for(let g=0; g<=4; g++){ const v=maxCum*g/4, y=yC(v); rlab+=`<text x="${W-pr+6}" y="${(y+3).toFixed(1)}" text-anchor="start" font-size="9" fill="#B4541F">${N1(v)}</text>`; }
+  let xlab=''; years.forEach((y,i)=> xlab+=`<text x="${xC(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${y}</text>`);
+  const preNota= preSold>0.5 ? `<div style="font-size:10px;color:var(--faint);margin-top:4px">Empieza con <b>${N1(preSold)}</b> lotes ya vendidos (heredados de Proyecto en marcha); las barras son ventas <b>nuevas</b>.</div>` : '';
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block" font-family="var(--sans)">${grid}${bars}${cumLine}${rlab}${xlab}</svg>
+    <div style="display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;font-size:10.5px;color:var(--muted)"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0E7C66;display:inline-block"></span>Lotes nuevos por año (izq.)</span><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:14px;height:0;border-top:2px solid #B4541F;display:inline-block"></span>Acumulado (der.)</span></div>${preNota}`;
+}
+
+function renderResumenProy(M){
+  const c=$("resumenProy"); if(!c) return;
+  if(!M){ c.innerHTML=`<div class="note" style="margin:0">Completa los módulos 1 a 6 para generar el resumen.</div>`; return; }
+  const T=M.totales;
+  const lotes=window.M3_lotesCant||0, lotTam=window.M3_lotTam||0;
+  const terrTamTxt=(typeof unidadTerr!=='undefined'&&unidadTerr==='mz')?`${N1(num('terrTam'))} mz`:`${N(window.M2_terrTamV2||0)} v²`;
+  const costoTerreno=(window.PM_on?window.M2_costoCompra:window.M2_terrCosto)||0;
+  const desembTerreno=costoTerreno+(window.M2_costosCompra||0);
+  const capital=window.M1_capitalTotal||0, prest=M.prestamoTotal||0, invTotal=capital+prest;
+  const ingreso=M.sumIngreso||0;
+  const precioLote=lotes>0?(window.M4_ingresoTotal||0)/lotes:0;
+  const aniosVenta=Math.round((window.M4_mesesVenta||0)/12*10)/10;
+  const desa=T.desa||0, planillaOper=(T.sal||0)+(T.opex||0)+(T.seg||0), com=T.com||0, imp=T.impuesto||0, pint=T.prestInt||0, dueno=T.dueno||0, soc=T.soc||0;
+  const costosTot=desembTerreno+desa+planillaOper+com+imp+pint;
+  const gananciaSocios=M.anual.reduce((s,a)=>s+(a.ganancia||0),0);
+  const reserva=M.reservaFinal||0, utilidad=M.utilidad||0, margen=M.margen||0;
+  const dur=Math.max(1,Math.ceil((M.H||12)/12));
+  const retorno=invTotal>0?utilidad/invTotal*100:0;
+  const hit=M.hitos||{}; const anioTxt=m=>(m>0)?`Año ${Math.ceil(m/12)}`:'—';
+  const fecha=(function(){try{return new Date().toLocaleDateString('es-HN',{year:'numeric',month:'long',day:'numeric'});}catch(e){return '';}})();
+  const usuario=(typeof curUser!=='undefined'&&curUser)?curUser:'';
+  const _scen=(typeof allScens!=='undefined'&&allScens&&allScens.find)?allScens.find(s=>s.id===curScenId):null;
+  const proyNombre=(_scen&&_scen.nombre&&_scen.nombre!=='Sin nombre')?_scen.nombre:'Proyecto de lotificación';
+  const neg=utilidad<0;
+  const parts=window.M1_participaciones||[], noms=window.M1_nombresSocios||[];
+
+  // ---- datos del nivel DETALLADO ----
+  const DET = (typeof resumenDetalle!=='undefined' && resumenDetalle==='detallado');
+  const terrV2=window.M2_terrTamV2||0, areaVend=window.M3_areaVendible||0, ingVentas=window.M4_ingresoTotal||0;
+  const precioVaraVend = areaVend>0 ? ingVentas/areaVend : 0;     // L por vara² VENDIBLE (a precio de venta)
+  const precioVaraTerr = terrV2>0 ? ingreso/terrV2 : 0;           // L por vara² de TODO el terreno (ingreso efectivo)
+  const costoVaraTerr  = terrV2>0 ? desembTerreno/terrV2 : 0;     // costo por vara² del terreno total
+  const nSoc=noms.length;
+  const aportes=(typeof socios!=='undefined'&&Array.isArray(socios))?socios.map(s=>s.aporte||0):[];
+  const benef=(typeof beneficiosPorSocio==='function')?beneficiosPorSocio():new Array(nSoc).fill(0);
+  const segTotSoc=T.seg||0, segPorSoc = nSoc>0 ? segTotSoc/nSoc : 0;   // prestaciones (seguro médico + RAP) por socio, partes iguales
+  const gananciaInd=parts.map(p=>gananciaSocios*p/100);
+  const planillaArr=window.M5_planilla||[];
+  const sueldosMes=planillaArr.reduce((a,p)=>a+(p.sueldo||0),0);
+  const viaticosMes=planillaArr.reduce((a,p)=>a+(p.viaticos||0),0);
+  const salarioMensual=sueldosMes+viaticosMes;
+  const aguinaldosOn=!!window.M5_aguinaldos;
+
+  const kpi=(lab,val,col,sub)=>`<div class="rp-kpi"><div class="lab">${lab}</div><div class="val" style="color:${col}">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+  const item=(l,v,big)=>`<div class="rp-item${big?' big':''}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  const tl=(l,v)=>`<div class="rp-tl-i"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  // tabla por socio (modo detallado): aporte · participación · ganancia individual · sueldo+beneficios · total a su favor
+  const thc='text-align:right;padding:5px 8px;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);font-weight:700';
+  const perSocioTabla=()=>{ if(!nSoc) return '';
+    const hayBenef = benef.some(b=>b>0.5) || segTotSoc>0.5;
+    const rows=noms.map((nm,i)=>{ const g=gananciaInd[i]||0, b=(benef[i]||0)+segPorSoc, tot=g+b;
+      return `<tr style="border-bottom:1px solid var(--line-2)">
+        <td style="padding:5px 8px;font-weight:600;color:var(--ink)">${nm||('Socio '+(i+1))}</td>
+        <td style="text-align:right;padding:5px 8px;font-family:var(--mono);color:var(--muted)">${L(aportes[i]||0)}</td>
+        <td style="text-align:right;padding:5px 8px;color:var(--faint)">${N1(parts[i]||0)}%</td>
+        <td style="text-align:right;padding:5px 8px;font-family:var(--mono);color:var(--teal);font-weight:700">${L(g)}</td>
+        ${hayBenef?`<td style="text-align:right;padding:5px 8px;font-family:var(--mono);color:var(--muted)">${b>0.5?L(b):'—'}</td>`:''}
+        <td style="text-align:right;padding:5px 8px;font-family:var(--mono);font-weight:700;color:var(--ink)">${L(tot)}</td></tr>`;}).join('');
+    return `<div style="overflow-x:auto;margin-top:11px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">
+      <thead><tr style="border-bottom:1.5px solid var(--line)"><th style="text-align:left;padding:5px 8px;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);font-weight:700">Socio</th><th style="${thc}">Aporte</th><th style="${thc}">Part.</th><th style="${thc}">Ganancia</th>${hayBenef?`<th style="${thc}">Sueldo+benef.</th>`:''}<th style="${thc}">Total a favor</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">La ganancia se reparte según participación; la primera ganancia llega en <b>${anioTxt(hit.ganancia)}</b>${hayBenef?`. “Sueldo+benef.” = planilla enlazada a cada socio${segTotSoc>0.5?` + prestaciones (seguro/RAP) repartidas en partes iguales`:''}`:''}.</div></div>`;};
+
+  const segs=[
+    {l:'Terreno',v:desembTerreno,c:'#B4541F'},{l:'Desarrollo',v:desa,c:'#2E7DA8'},
+    {l:'Planilla y operación',v:planillaOper,c:'#C99A2E'},{l:'Comisiones',v:com,c:'#7A5EA8'},
+    {l:'Impuestos',v:imp,c:'#34495E'},{l:'Intereses de préstamos',v:pint,c:'#8AA0C8'},
+    {l:'Ganancia y reserva',v:Math.max(0,utilidad),c:'#0E7C66'}
+  ].filter(s=>s.v>0.5);
+  const segTot=segs.reduce((a,s)=>a+s.v,0)||1;
+  const barra=`<div style="display:flex;height:26px;border-radius:7px;overflow:hidden;border:1px solid var(--line-2)">`+
+    segs.map(s=>`<div title="${s.l}: ${L(s.v)}" style="width:${(s.v/segTot*100).toFixed(2)}%;background:${s.c}"></div>`).join('')+`</div>`;
+  const leyenda=`<div style="display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:9px;font-size:10.5px;color:var(--muted)">`+
+    segs.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${s.c};display:inline-block"></span>${s.l} · <b style="font-family:var(--mono);color:var(--ink)">${L(s.v)}</b> (${(s.v/segTot*100).toFixed(0)}%)</span>`).join('')+`</div>`;
+
+  let h=`<div class="rp-doc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap">
+      <div style="min-width:0"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:700;margin-bottom:2px">Resumen de proyección</div>
+        <div class="rp-title">${proyNombre}</div>
+        <div class="rp-sub">Lotificación · ${terrTamTxt} · ${N(lotes)} lotes${usuario?` · ${usuario}`:''}${fecha?` · ${fecha}`:''}</div></div>
+      <div style="text-align:right;min-width:175px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700">Ganancia del proyecto</div>
+        <div style="font-size:31px;font-weight:800;font-family:var(--mono);color:${neg?'var(--clay)':'var(--teal)'};line-height:1">${L(utilidad)}</div>
+        <div style="font-size:11px;color:var(--muted)">margen ${N1(margen)}% <span style="color:var(--faint)">(ganancia ÷ ventas)</span></div>
+      </div>
+    </div>
+    <div class="rp-hero">
+      ${kpi('Ingreso por ventas', L(ingreso), 'var(--ink)', `${N(lotes)} lotes · ~${aniosVenta} años`)}
+      ${kpi('Costo total', L(costosTot), 'var(--ink)', 'terreno, desarrollo, operación e impuestos')}
+      ${kpi('Ganancia de la sociedad', L(gananciaSocios), 'var(--teal)', 'utilidad repartida entre socios')}
+      ${kpi('Reserva de reinversión', L(reserva), 'var(--purple)', 'utilidad retenida en la empresa')}
+    </div>
+    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">1</span><span class="rp-sec-t">El terreno</span></div>
+      <div class="rp-row">${item('Tamaño del terreno', terrTamTxt)}${item('Lotes a vender', `${N(lotes)} <span style="font-size:11px;color:var(--faint)">de ${N(lotTam)} v²</span>`)}${item('Costo del terreno', L(desembTerreno), true)}</div></section>
+    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">2</span><span class="rp-sec-t">La inversión</span></div>
+      <div class="rp-row">${item('Capital de socios', L(capital))}${item('Préstamos', L(prest))}${item('Inversión inicial', L(invTotal), true)}${item('Inversión en desarrollo', L(desa))}</div>
+      ${DET&&nSoc?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Aporte inicial por socio: `+aportes.map((a,i)=>`<b style="color:var(--ink)">${noms[i]||('Socio '+(i+1))}</b> ${L(a)}`).join(' · ')+`</div>`:''}</section>
+    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">3</span><span class="rp-sec-t">Las ventas</span></div>
+      <div class="rp-row">${item('Precio promedio por lote', L(precioLote))}${item('Ingreso total por ventas', L(ingreso), true)}${item('Tiempo de venta', `${aniosVenta} años`)}</div>
+      ${DET?`<div class="rp-row" style="margin-top:8px">${item('Precio por vara (vendible)', L(precioVaraVend))}${item('Precio por vara (todo el terreno)', L(precioVaraTerr))}${item('Costo por vara del terreno', L(costoVaraTerr))}</div>`:''}</section>
+    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">4</span><span class="rp-sec-t">Distribución del dinero</span></div>
+      ${barra}${leyenda}</section>
+    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">5</span><span class="rp-sec-t">El resultado</span></div>
+      <div class="rp-row">${item('Ganancia del proyecto', L(utilidad), true)}${item('Margen', `${N1(margen)}%`)}${item('Ganancia de la sociedad', L(gananciaSocios))}${item('Reserva de reinversión', L(reserva))}</div>
+      ${DET ? perSocioTabla() : (parts.length?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Ganancia individual: `+parts.map((p,i)=>`<b style="color:var(--ink)">${noms[i]||('Socio '+(i+1))}</b> ${L(gananciaSocios*p/100)} <span style="color:var(--faint)">(${N1(p)}%)</span>`).join(' · ')+`</div>`:'')}</section>`;
+  const tlItems=[tl('Duración total', `${dur} años`), tl('Terreno pagado', anioTxt(hit.dueno)), tl('Desarrollo completo', anioTxt(hit.desa)), tl('Primera ganancia', anioTxt(hit.ganancia))];
+  if(prest>0) tlItems.push(tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no se terminan'));
+  if(soc>0) tlItems.push(tl('Capital devuelto a socios', anioTxt(hit.socios)));
+  h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">6</span><span class="rp-sec-t">Línea de tiempo</span></div>
+      <div class="rp-tl">${tlItems.join('')}</div></section>`;
+
+  if(DET){
+    // ◆ Salario y beneficios (nivel de proyecto)
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Salario y beneficios</span></div>
+      <div class="rp-row">${item('Salario mensual (planilla)', L(salarioMensual))}${item('Aguinaldos (13.º y 14.º)', aguinaldosOn?`${L(sueldosMes*2)}/año`:'no aplican')}${item('Viáticos', viaticosMes>0?`${L(viaticosMes)}/mes`:'—')}${item('Prestaciones de socios', segTotSoc>0.5?L(segTotSoc):'—')}</div>
+      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">Costo total de planilla en el proyecto: <b>${L(T.sal||0)}</b>${segTotSoc>0.5?` · prestaciones (seguro médico + RAP voluntario): <b>${L(segTotSoc)}</b>, beneficio de los socios`:''}. Enlaza cada sueldo a su socio en <b>Costos → Salarios (¿Socio?)</b> para verlo por socio arriba.</div></section>`;
+    // ◆ Gráficas
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Ganancias por año y acumulado</span></div>
+      ${svgGananciasPorAnio(M)}</section>`;
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Volumen de venta en el tiempo</span></div>
+      ${svgVentasPorAnio(M)}</section>`;
+  }
+
+  h+=`<div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--line-2);font-size:9.5px;color:var(--faint);line-height:1.5">Escenario ideal, en Lempiras de hoy, cifras redondeadas. El detalle año por año está en <b>Proyección</b> y <b>Contable</b>.</div>
+  </div>`;
+  c.innerHTML=h;
+}
+function exportarResumenPDF(){ setTab('resumen'); setTimeout(function(){ window.print(); }, 80); }
+
+/* ===================== COMPARADOR DE PROYECCIONES =====================
+   Compara varias proyecciones lado a lado. Para cada una: se trae su estado guardado, se aplica al
+   motor real (misma fuente de verdad, sin duplicar fórmulas), se capturan las cifras macro y al final
+   se RESTAURA el escenario original. Durante el barrido, `_comparando` bloquea el guardado en la nube
+   para no pisar ningún documento.                                                                      */
+let compModo='full';       // 'full' = todas las filas · 'mini' = solo las clave
+let _comparando=false;
+function abrirComparador(){
+  if(!db){ alert("Aún no hay conexión con la nube; intenta de nuevo en un momento."); return; }
+  const cont=$("compLista"); if(!cont) return;
+  const mios=(allScens||[]).filter(s=>s.owner===curUser), otros=(allScens||[]).filter(s=>s.owner!==curUser);
+  const chk=(s,def)=>`<label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink);min-width:190px"><input type="checkbox" class="cmpChk" value="${s.id}" ${def?'checked':''} style="width:auto"> ${(s.nombre||'Sin nombre')}${s.owner!==curUser?` <span style="color:var(--faint)">· ${s.owner}</span>`:''}</label>`;
+  let html='';
+  if(mios.length) html+=mios.map(s=>chk(s, s.id===curScenId)).join('');
+  if(otros.length) html+=`<div style="width:100%;height:1px;background:var(--line-2);margin:4px 0"></div>`+otros.map(s=>chk(s,false)).join('');
+  cont.innerHTML=html || `<div style="font-size:11px;color:var(--faint)">No hay proyecciones guardadas todavía. Usa <b>⧉ Duplicar</b> para crear variantes.</div>`;
+  if($("compResultado")) $("compResultado").innerHTML=`<div style="font-size:11.5px;color:var(--faint);padding:16px 2px">Elige las proyecciones a comparar y pulsa <b>Generar comparativa</b>.</div>`;
+  if($("compOv")) $("compOv").style.display='flex';
+}
+function cerrarComparador(){ if($("compOv")) $("compOv").style.display='none'; }
+function marcarTodasComp(v){ document.querySelectorAll('#compLista .cmpChk').forEach(c=>{ c.checked=!!v; }); }
+function setCompModo(m){ compModo=(m==='mini')?'mini':'full';
+  if($("segCmpFull")) $("segCmpFull").classList.toggle('on',compModo==='full');
+  if($("segCmpMini")) $("segCmpMini").classList.toggle('on',compModo==='mini');
+  if(window._compData) pintarComparativa(window._compData);
+}
+// captura las cifras macro del escenario ACTUALMENTE aplicado (lee los globales que dejó calcProyeccion)
+function capturarComparativa(nombre, M){
+  if(!M) return {nombre, err:true};
+  const T=M.totales;
+  const terrV2=window.M2_terrTamV2||0, areaVend=window.M3_areaVendible||0, lotes=window.M3_lotesCant||0;
+  const costoTerreno=(window.PM_on?window.M2_costoCompra:window.M2_terrCosto)||0;
+  const desembTerreno=costoTerreno+(window.M2_costosCompra||0);
+  const capital=window.M1_capitalTotal||0, prest=M.prestamoTotal||0, inv=capital+prest;
+  const ingreso=M.sumIngreso||0, ingVentas=window.M4_ingresoTotal||0;
+  const gananciaSocios=M.anual.reduce((s,a)=>s+(a.ganancia||0),0);
+  const costoTotal=desembTerreno+(T.desa||0)+(T.sal||0)+(T.opex||0)+(T.seg||0)+(T.com||0)+(T.impuesto||0)+(T.prestInt||0);
+  return { nombre, err:false, lotes, terrV2, unidad:(typeof unidadTerr!=='undefined'?unidadTerr:'v2'),
+    inversion:inv, ingreso, precioVaraVend: areaVend>0?ingVentas/areaVend:0, precioVaraTerr: terrV2>0?ingreso/terrV2:0,
+    costoTotal, utilidad:M.utilidad||0, margen:M.margen||0, gananciaSocios, reserva:M.reservaFinal||0,
+    retorno: inv>0?(M.utilidad||0)/inv*100:0, aniosVenta:Math.round((window.M4_mesesVenta||0)/12*10)/10,
+    dur:Math.max(1,Math.ceil((M.H||12)/12)), primeraGanancia:(M.hitos&&M.hitos.ganancia)||0 };
+}
+async function correrComparativa(){
+  const ids=Array.from(document.querySelectorAll('#compLista .cmpChk')).filter(c=>c.checked).map(c=>c.value);
+  const out=$("compResultado");
+  if(!ids.length){ if(out) out.innerHTML=`<div class="note warn" style="margin:0">Marca al menos una proyección para comparar.</div>`; return; }
+  const btn=$("btnCompCalc"); if(btn){ btn.disabled=true; btn.textContent='Calculando…'; }
+  const snapshot=gatherState(); const snapScen=curScenId;   // para restaurar al terminar
+  _comparando=true;
+  clearTimeout(_ct);   // cancela cualquier guardado pendiente: durante el barrido la pantalla muestra otros escenarios
+  const cols=[];
+  try{
+    for(const id of ids){
+      let data=null, nombre='(sin nombre)';
+      const meta=(allScens||[]).find(s=>s.id===id); if(meta) nombre=meta.nombre||nombre;
+      if(id===snapScen){ data=snapshot; }
+      else { try{ const doc=await db.collection("escenarios").doc(id).get(); if(doc && doc.exists){ const d=doc.data(); nombre=d.nombre||nombre; data=JSON.parse(d.data||"{}"); } }catch(e){ console.error(e); } }
+      if(!data){ cols.push({nombre, err:true}); continue; }
+      applyState(data);
+      if(typeof setPMVars==='function') setPMVars();
+      if(typeof calcProyeccion==='function') calcProyeccion();
+      cols.push(capturarComparativa(nombre, (typeof _proyModel!=='undefined')?_proyModel:null));
+    }
+  }catch(e){ console.error(e); }
+  finally{
+    try{ applyState(snapshot); if(typeof calcProyeccion==='function') calcProyeccion(); }catch(e){ console.error(e); }
+    _comparando=false;
+    if(btn){ btn.disabled=false; btn.textContent='Generar comparativa'; }
+  }
+  window._compData=cols;
+  pintarComparativa(cols);
+}
+function pintarComparativa(cols){
+  const c=$("compResultado"); if(!c) return;
+  const valid=(cols||[]).filter(x=>x && !x.err);
+  if(!valid.length){ c.innerHTML=`<div class="note warn" style="margin:0">No se pudo calcular ninguna de las proyecciones elegidas (¿les faltan datos?).</div>`; return; }
+  const unidadTxt=x=> x.unidad==='mz' ? `${N1((x.terrV2||0)/V2_POR_MZ)} mz` : `${N(x.terrV2||0)} v²`;
+  const anioT=m=> m>0 ? `Año ${Math.ceil(m/12)}` : '—';
+  // filas: [etiqueta, fn(x)->texto, clave-para-mini, mejorEs('max'|'min'|null), val(x)->número]
+  const rows=[
+    ['Terreno',                 x=>unidadTxt(x),               false, null,  null],
+    ['Lotes',                   x=>N(x.lotes),                 true,  null,  null],
+    ['Inversión inicial',       x=>L(x.inversion),             true,  'min', x=>x.inversion],
+    ['Ingreso por ventas',      x=>L(x.ingreso),               true,  'max', x=>x.ingreso],
+    ['Precio por vara (vendible)',x=>L(x.precioVaraVend),      false, null,  null],
+    ['Precio por vara (terreno)',x=>L(x.precioVaraTerr),       false, null,  null],
+    ['Costo total',             x=>L(x.costoTotal),            false, 'min', x=>x.costoTotal],
+    ['Ganancia del proyecto',   x=>L(x.utilidad),              true,  'max', x=>x.utilidad],
+    ['Margen',                  x=>N1(x.margen)+'%',           true,  'max', x=>x.margen],
+    ['Retorno sobre inversión', x=>N1(x.retorno)+'%',          true,  'max', x=>x.retorno],
+    ['Ganancia de la sociedad', x=>L(x.gananciaSocios),        false, 'max', x=>x.gananciaSocios],
+    ['Reserva de reinversión',  x=>L(x.reserva),               false, 'max', x=>x.reserva],
+    ['Tiempo de venta',         x=>`${x.aniosVenta} años`,     false, null,  null],
+    ['Duración total',          x=>`${x.dur} años`,            false, 'min', x=>x.dur],
+    ['Primera ganancia',        x=>anioT(x.primeraGanancia),   false, null,  null]
+  ].filter(r=> compModo==='full' || r[2]);
+  const th=`text-align:right;padding:7px 10px;font-size:11px;font-weight:700;color:var(--ink);border-bottom:2px solid var(--line);white-space:nowrap`;
+  let head=`<th style="text-align:left;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);border-bottom:2px solid var(--line);position:sticky;left:0;background:var(--surface)">Indicador</th>`;
+  valid.forEach(x=> head+=`<th style="${th}">${(x.nombre||'—')}</th>`);
+  let body='';
+  rows.forEach(r=>{
+    const [lab,fn,,mejor,valf]=r;
+    let best=null;
+    if(mejor && valf){ const vals=valid.map(valf); best = mejor==='max'?Math.max(...vals):Math.min(...vals); }
+    let tds='';
+    // "mejor" con tolerancia RELATIVA (evita resaltar casi-empates en filas de % como el margen)
+    valid.forEach(x=>{ const isBest = (mejor && valf && valid.length>1 && Math.abs(valf(x)-best)<Math.max(0.01,Math.abs(best)*0.001));
+      tds+=`<td style="text-align:right;padding:6px 10px;font-family:var(--mono);font-size:11.5px;border-bottom:1px solid var(--line-2);${isBest?'background:var(--teal-soft);color:var(--teal);font-weight:700':'color:var(--ink)'}">${fn(x)}</td>`; });
+    body+=`<tr><td style="text-align:left;padding:6px 10px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line-2);position:sticky;left:0;background:var(--surface)">${lab}</td>${tds}</tr>`;
+  });
+  const err=(cols||[]).filter(x=>x&&x.err);
+  c.innerHTML=`<div style="font-size:11px;color:var(--faint);margin-bottom:8px">Comparando <b>${valid.length}</b> ${valid.length===1?'proyección':'proyecciones'}${compModo==='mini'?' · vista resumida':''}. En verde, el mejor valor de cada fila.</div>
+    <div style="overflow-x:auto"><table style="border-collapse:collapse;min-width:100%"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
+    ${err.length?`<div style="font-size:10.5px;color:var(--clay);margin-top:8px">No se pudieron calcular: ${err.map(e=>e.nombre).join(', ')} (les faltan datos para proyectar).</div>`:''}`;
+}
+function exportarComparativaPDF(){
+  if(!window._compData || !window._compData.some(x=>x&&!x.err)){ alert("Primero genera la comparativa."); return; }
+  document.body.classList.add('print-comp');
+  setTimeout(function(){ try{ window.print(); } finally { setTimeout(function(){ document.body.classList.remove('print-comp'); }, 300); } }, 60);
+}
+
 function renderProyHitos(M){
   const c=$("proyHitosStrip"); if(!c) return;
   const pill=(lab,val,ok)=>`<span style="display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid ${ok?'#BFE0D7':'var(--line)'};border-radius:20px;padding:5px 12px">
@@ -4198,13 +4827,14 @@ function pmCarteraSolveAuto(){
 }
 function pmCarteraSolve(input){
   const A = window.M3_areaVendible||0;
+  const S0 = window.M3_lotTam||0;   // tamaño de lote heredado de Lotificación (semilla, no fijado por el usuario)
   const v={}, isU={};
   for(const kk in input){ if(input[kk]!=null && isFinite(input[kk])){ v[kk]=input[kk]; isU[kk]=true; } }
   const conflicts=[];
   const tol=(a,b)=>Math.abs(a-b)<=Math.max(1,Math.abs(b)*0.015);
   const H=x=>v[x]!=null&&isFinite(v[x]);
   const put=(x,val,eq)=>{ if(!isFinite(val)) return false; if(!H(x)){ v[x]=val; return true; } if(!tol(v[x],val) && !conflicts.some(c=>c.eq===eq)) conflicts.push({v:x,eq}); return false; };
-  for(let it=0; it<16; it++){
+  const fix=()=>{ for(let it=0; it<16; it++){
     let ch=false;
     if(A>0){ if(H('p')) ch=put('Av',A*v.p/100,'e1')||ch; if(H('Av')) ch=put('p',v.Av/A*100,'e1')||ch; }
     if(H('Av')&&H('s')&&v.s>0) ch=put('n',v.Av/v.s,'e2')||ch;
@@ -4223,6 +4853,17 @@ function pmCarteraSolve(input){
     if(H('m')&&H('n')&&v.n>0) ch=put('q',v.m/v.n,'e6')||ch;
     if(H('m')&&H('q')&&v.q>0) ch=put('n',v.m/v.q,'e6')||ch;
     if(!ch) break;
+  } };
+  fix();
+  // ENLACE con Lotificación: si el usuario no fijó el "tamaño prom. de lote" y quedó indeterminado, se hereda
+  // el tamaño del Módulo 3 (se muestra en teal como heredado). Sólo se adopta si NO agrega inconsistencias.
+  if(S0>0 && !(v.s!=null&&isFinite(v.s))){
+    const snapV=Object.assign({},v), snapC=conflicts.slice();
+    v.s=S0; fix();
+    if(conflicts.length>snapC.length){   // el enlace introdujo un choque → se revierte (gana lo que puso el usuario)
+      for(const k in v) delete v[k]; Object.assign(v,snapV);
+      conflicts.length=0; Array.prototype.push.apply(conflicts,snapC);
+    }
   }
   return {v, isU, conflicts, A};
 }
@@ -4371,6 +5012,7 @@ function gatherState(){
     terrTam:num("terrTam"), unidadTerr, precioMode, terrPrecioTotal:num("terrPrecioTotal"), terrPrecioUnit:num("terrPrecioUnit"),
     terrEnganche:num("terrEnganche"), pagoDuenoMode, terrPagoAnios:num("terrPagoAnios"), terrPagoMeses:num("terrPagoMeses"), terrPagoVentasPct:num("terrPagoVentasPct"),
     terrCostoPoder:num("terrCostoPoder"), terrCostoTopo:num("terrCostoTopo"), topoManual, otrosCostos,
+    lotMode, lotp:lotpGather(),
     lotTam:num("lotTam"), lotCallesPct:num("lotCallesPct"), lotVerdePct:num("lotVerdePct"), lotFrente:num("lotFrente"), lotFrenteManual, desarrollo,
     vtaAnios:num("vtaAnios"), planes, ventaFlujoMode,
     // módulo 5 (costos recurrentes)
@@ -4407,6 +5049,7 @@ function blankState(){
     terrTam:0, unidadTerr:'v2', precioMode:'total', terrPrecioTotal:0, terrPrecioUnit:0,
     terrEnganche:0, pagoDuenoMode:'anios', terrPagoAnios:0, terrPagoMeses:0, terrPagoVentasPct:0,
     terrCostoPoder:0, terrCostoTopo:0, topoManual:false, otrosCostos:[],
+    lotMode:'pct', lotp:{Av:'',Anv:'',n:'',s:'',Ac:'',Ve:'',ml:'',w:''},
     lotTam:0, lotCallesPct:0, lotVerdePct:0, lotFrente:0, lotFrenteManual:false,
     desarrollo: DESARROLLO_TIPICOS.map(d=>({nombre:d.nombre, tipo:d.tipo, monto:0})),
     vtaAnios:0, ventaFlujoMode:'plano',
@@ -4480,6 +5123,19 @@ function applyState(d){
     if(d.lotVerdePct!=null) $("lotVerdePct").value=d.lotVerdePct;
     if(d.lotFrenteManual!=null) lotFrenteManual=d.lotFrenteManual;
     if(d.lotFrente!=null) $("lotFrente").value=d.lotFrente;
+    // modo de ingreso del Módulo 3 (%/plano) + campos del plano
+    { const setp=(id,val)=>{ const el=$(id); if(el){ el.value=(val==null?'':val); el.dataset.auto=''; el.style.color=''; el.style.fontStyle=''; } };
+      const lp=d.lotp;
+      if(lp && typeof lp==='object'){
+        setp('lotpAv',lp.Av); setp('lotpAnv',lp.Anv); setp('lotpN',lp.n); setp('lotpS',lp.s);
+        setp('lotpAc',lp.Ac); setp('lotpVe',lp.Ve); setp('lotpMl',lp.ml); setp('lotpW',lp.w);
+      }
+    }
+    { const esPlano=(d.lotMode==='plano'); lotMode = esPlano?'plano':'pct';
+      if($("lotPctWrap")) $("lotPctWrap").style.display = esPlano?'none':'';
+      if($("lotPlanoWrap")) $("lotPlanoWrap").style.display = esPlano?'':'none';
+      if($("segLotPct")) $("segLotPct").classList.toggle('on', !esPlano);
+      if($("segLotPlano")) $("segLotPlano").classList.toggle('on', esPlano); }
     if(Array.isArray(d.desarrollo)){
       // migración: rubros de versiones anteriores no traían 'tipo'. Se infiere por el nombre
       // para recuperar su estimado automático; los no reconocidos quedan como 'otro' (manual).
@@ -4502,7 +5158,7 @@ function applyState(d){
       renderPlanes();
     }
     // módulo 5 (costos recurrentes)
-    if(Array.isArray(d.salarios)){ salarios=d.salarios.map(s=>({nombre:s.nombre||"", sueldo:s.sueldo||0, viaticos:s.viaticos||0, inicioMes:Math.max(1,Math.round(s.inicioMes||1))})); renderSalarios(); }
+    if(Array.isArray(d.salarios)){ salarios=d.salarios.map(s=>({nombre:s.nombre||"", sueldo:s.sueldo||0, viaticos:s.viaticos||0, inicioMes:Math.max(1,Math.round(s.inicioMes||1)), socio:Number.isInteger(s.socio)?s.socio:-1})); renderSalarios(); }
     cargasCfg = _mergeCargas(d.cargasCfg);   // versiones viejas (salPatronal %) → cargas apagadas con tasas sugeridas
     renderCargas();
     if(d.salMeses!=null && $("salMeses")) $("salMeses").value=d.salMeses;
@@ -4703,6 +5359,23 @@ function newScen(){
   const n=prompt("Nombre de la nueva proyección:","Escenario "+(allScens.filter(s=>s.owner===curUser).length+1));
   if(n) crearEscenario(n.trim(), true, nuevoProyectoState());   // proyecto nuevo = mantiene lo anterior, resetea SOLO la compra del terreno
 }
+// DUPLICAR: crea un gemelo independiente de la proyección actual (mismo contenido, nombre nuevo) y lo abre.
+// El original queda intacto; desde ese momento cada uno se edita por separado. Sirve para armar variantes y
+// compararlas luego en el Resumen. Funciona incluso sobre una proyección ajena (el duplicado queda a tu nombre).
+async function duplicarScen(){
+  if(!db){ alert("Aún no hay conexión con la nube; intenta de nuevo en un momento."); return; }
+  if(!curScenId){ alert("Primero abre o crea una proyección para poder duplicarla."); return; }
+  const actual=allScens.find(s=>s.id===curScenId);
+  const base=(actual&&actual.nombre&&actual.nombre!=='Sin nombre')?actual.nombre:'Proyección';
+  const n=prompt("Nombre del duplicado:", base+" (copia)");
+  if(!n||!n.trim()) return;
+  try{
+    cloudStatus("duplicando…");
+    // gemelo exacto del estado actual en pantalla; queda como documento independiente a tu nombre
+    await crearEscenario(n.trim(), true, gatherState());
+    cloudStatus("✓ duplicado creado","#7FD9BE");
+  }catch(e){ console.error(e); cloudStatus("⚠ no se pudo duplicar","#E0A080"); alert("No se pudo crear el duplicado. Revisa la conexión e intenta de nuevo."); }
+}
 async function renameScen(){
   if(readOnly){ alert("Esta proyección es de "+curScenOwner+". Cree una copia propia para poder modificarla."); return; }
   const actual=allScens.find(s=>s.id===curScenId);
@@ -4751,7 +5424,7 @@ async function doCopy(){
 
 /* ---- guardado ---- */
 function cloudSave(){
-  if(!db || applyingRemote || !curScenId) return;
+  if(!db || applyingRemote || _comparando || !curScenId) return;   // _comparando: barrido del comparador, no guardar
   if(readOnly){ pedirCopia(); return; }     // avisa ANTES de guardar nada
   clearTimeout(_ct);
   _ct=setTimeout(()=>{
