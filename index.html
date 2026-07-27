@@ -698,7 +698,7 @@
             <div style="background:var(--teal-soft);border:1px solid #BFE0D7;border-radius:9px;padding:10px 12px">
               <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--teal);font-weight:700;margin-bottom:3px">Ingreso total por ventas</div>
               <div class="val teal" style="font-size:15px;font-weight:700;font-family:var(--mono);white-space:nowrap" id="rVtaIngreso">—</div>
-              <div style="font-size:10px;color:var(--faint)">suma de todos los lotes</div>
+              <div style="font-size:10px;color:var(--faint)" id="rVtaIngresoNota">suma de todos los lotes</div>
             </div>
             <div style="background:var(--surface-2);border-radius:9px;padding:10px 12px">
               <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:700;margin-bottom:3px">Prima total</div>
@@ -730,9 +730,9 @@
         <h2><span class="num">5</span> Salarios y planilla</h2>
         <p style="margin:0 0 8px;font-size:11.5px;color:var(--muted)">Sueldos de empleados y socios. El aguinaldo (13vo) se paga en <strong>diciembre</strong> y el 14vo mes en <strong>julio</strong>.</p>
         <div class="tbl-wrap"><table class="tbl-salarios">
-          <thead><tr><th>Persona</th><th>Sueldo/mes</th><th>Viáticos/mes</th><th title="Desde qué mes se empieza a pagar este sueldo">Inicio<br><span style="font-weight:400;color:var(--faint);font-size:9px">mes</span></th><th title="Si esta persona es un socio, enlázala para que su sueldo cuente como beneficio de ese socio en el Resumen">¿Socio?</th><th></th></tr></thead>
+          <thead><tr><th>Persona</th><th>Sueldo/mes</th><th>Viáticos/mes</th><th title="Desde qué mes se empieza a pagar este sueldo">Inicio<br><span style="font-weight:400;color:var(--faint);font-size:9px">mes</span></th><th></th></tr></thead>
           <tbody id="salBody"></tbody>
-          <tfoot><tr><td>Totales</td><td id="tSalSueldo"></td><td id="tSalViat"></td><td></td><td></td><td></td></tr></tfoot>
+          <tfoot><tr><td>Totales</td><td id="tSalSueldo"></td><td id="tSalViat"></td><td></td><td></td></tr></tfoot>
         </table></div>
         <button class="btn sm" onclick="addSalario()">+ Agregar persona</button>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
@@ -1076,8 +1076,10 @@
               <div style="display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:1px 0 6px">
                 <button id="segCarEsc" class="segb on" onclick="setPMCarteraMode('escenario')" style="padding:4px 9px" title="Planear: llena lo que sepas y el resto se deduce solo.">Escenario</button>
                 <button id="segCarReal" class="segb" onclick="setPMCarteraMode('real')" style="padding:4px 9px" title="Ya tienes los datos: pon solo lo real que necesita la proyección.">Datos reales</button>
+                <button id="segCarLotes" class="segb" onclick="setPMCarteraMode('lotes')" style="padding:4px 9px" title="Detalle por lotes: los de contado (dinero ya cobrado) y los de crédito (se estima lo cobrado hasta hoy).">Por lotes</button>
               </div>
               <p id="pmcIntro" style="margin:0 0 7px;font-size:10.5px;color:var(--faint)">Ingrese los datos disponibles; los demás se <b style="color:var(--teal)">autocompletan</b> (en teal). Al escribir sobre un valor autocompletado, ese valor queda fijado; se advierte si algún dato es inconsistente. Área vendible = <b id="pmcArea">—</b>.</p>
+              <div id="pmCarteraFields">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 12px">
                 <div class="pmcf"><label>% del terreno ya vendido</label><div class="ctrl"><input type="number" id="pmcP" oninput="pmcEdit(this)" style="width:56px"><span class="unit">%</span><span id="pmcP_h" style="font-size:10px"></span></div></div>
                 <div class="pmcf pmc-deriv"><label>Área ya vendida</label><div class="ctrl"><input type="number" id="pmcAv" oninput="pmcEdit(this)" style="width:88px"><span class="unit">v²</span><span id="pmcAv_h" style="font-size:10px"></span></div></div>
@@ -1093,6 +1095,25 @@
               </div>
               <div id="pmcBanner" style="margin-top:7px"></div>
               <div style="font-size:10px;color:var(--faint);margin-top:4px">Se distribuye de forma uniforme mes a mes desde el mes 1. Sin prima ni comisión. El % vendido deja de contarse como inventario propio.</div>
+              </div>
+
+              <div id="pmLotesWrap" style="display:none">
+                <p style="margin:0 0 8px;font-size:10.5px;color:var(--faint);line-height:1.45">Separa lo ya vendido en <b>contado</b> (cobrado completo, va a lo que el dueño ya percibió) y <b>crédito</b> (con promedios). Del crédito se <b style="color:var(--teal)">estima</b> cuánto se ha cobrado hasta hoy y cuánto resta, según hace cuánto empezó a venderse, la cuota promedio y el flujo de venta ascendente. Área vendible = <b id="pmldArea">—</b>.</p>
+                <div style="font-size:11px;font-weight:700;color:var(--ink);margin:2px 0 4px">De contado <span style="font-weight:400;color:var(--faint)">· ya cobrados al 100%</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 12px">
+                  <div class="pmcf"><label>Lotes vendidos de contado</label><div class="ctrl"><input type="number" id="pmldLotesC" oninput="calcPM()" style="width:62px"></div></div>
+                  <div class="pmcf"><label>Precio/vara de contado</label><div class="ctrl"><input type="number" id="pmldPvC" oninput="calcPM()" style="width:62px"><span class="unit">L</span></div></div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--ink);margin:10px 0 4px">A crédito <span style="font-weight:400;color:var(--faint)">· se estima lo cobrado hasta hoy</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 12px">
+                  <div class="pmcf"><label>Lotes vendidos a crédito</label><div class="ctrl"><input type="number" id="pmldLotesCr" oninput="calcPM()" style="width:62px"></div></div>
+                  <div class="pmcf"><label>Precio/vara promedio</label><div class="ctrl"><input type="number" id="pmldPvCr" oninput="calcPM()" style="width:62px"><span class="unit">L</span></div></div>
+                  <div class="pmcf"><label>Cuota promedio <span style="color:var(--faint);font-weight:400">(por lote/mes)</span></label><div class="ctrl"><input type="number" id="pmldCuota" oninput="calcPM()" style="width:72px"><span class="unit">L</span></div></div>
+                  <div class="pmcf"><label>Empezó a venderse hace</label><div class="ctrl"><input type="number" id="pmldMeses" oninput="calcPM()" style="width:56px"><span class="unit">m</span></div></div>
+                  <div class="pmcf"><label>Prima al comprar <span style="color:var(--faint);font-weight:400">(opcional)</span></label><div class="ctrl"><input type="number" id="pmldPrima" oninput="calcPM()" style="width:52px"><span class="unit">%</span></div></div>
+                </div>
+                <div id="pmldBanner" style="margin-top:9px"></div>
+              </div>
             </div>
 
             <div class="pm-box" style="min-width:0">
@@ -1385,7 +1406,8 @@ function renderSoc(){
       <td><button class="rowdel" onclick="delSoc(${i})" title="Quitar">×</button></td>`;
     b.appendChild(tr);
   });
-  // mantener al día los enlaces "¿Socio?" de la planilla (sin robar el foco si el usuario está escribiendo ahí)
+  // refrescar la planilla para actualizar el resaltado de líneas que coinciden por nombre con un socio
+  // (sin robar el foco si el usuario está escribiendo ahí)
   if(typeof renderSalarios==='function'){ const f=document.activeElement; if(!(f&&f.closest&&f.closest('#salBody'))) renderSalarios(); }
 }
 function updSoc(i,k,v,tipo){
@@ -1395,8 +1417,8 @@ function updSoc(i,k,v,tipo){
 }
 function addSoc(){ socios.push({nombre:"Socio "+(socios.length+1), aporte:0, prestamo:false, tasa:0, plazoBanco:36, part:0}); renderSoc(); calc(); }
 function delSoc(i){ if(socios.length<=1) return; socios.splice(i,1);
-  // reindexar los enlaces "¿Socio?" de la planilla: el borrado se desvincula; los de índice mayor bajan uno
-  if(Array.isArray(salarios)) salarios.forEach(s=>{ if(Number.isInteger(s.socio)){ if(s.socio===i) s.socio=-1; else if(s.socio>i) s.socio--; } });
+  // el enlace planilla↔socio es por NOMBRE, no por índice: al borrar un socio, sus líneas de salario
+  // simplemente dejan de coincidir. No hay nada que reindexar; solo refrescamos el resaltado.
   renderSoc(); calc(); }
 
 // cuota de préstamo amortizado (sistema francés): el interés se cobra sobre el saldo pendiente
@@ -2125,7 +2147,10 @@ function lotpRender(){
   const v=sol.v, isU=sol.isU||{};
   const fPlain=(x,dec)=> (x==null||!isFinite(x))?'' : (dec? (Math.round(x*10)/10) : Math.round(x));
   // AUTO-LLENADO: las casillas que NO llenó el usuario se rellenan con el valor derivado (cursiva teal, marcadas 'auto')
+  // Los campos ocultos por el modo activo no se tocan: lo ingresado en el otro modo se conserva al cambiar de switch.
+  const _vis = e => { for(let n=e; n; n=n.parentElement){ if(n.style && n.style.display==='none') return false; } return true; };
   const fill=(id,x,dec)=>{ const el=$(id), h=$(id+'_h'); if(!el) return;
+    if(!_vis(el)) return;   // oculto por el modo → preservar lo ingresado
     if(isU[x]){ el.dataset.auto=''; el.style.color=''; el.style.fontStyle=''; if(h){ h.textContent='✓'; h.style.color='var(--faint)'; } return; }
     if(lotMode==='plano' && v[x]!=null && isFinite(v[x]) && el!==document.activeElement){
       el.value=fPlain(v[x],dec); el.dataset.auto='1'; el.style.color='var(--teal)'; el.style.fontStyle='italic';
@@ -2457,61 +2482,73 @@ function renderPlanes(){
 }
 function calcVentas(){
   initPlanes();
-  const lotesTotal = window.M3_lotesCant||0;
-  const lotV2 = window.M3_lotTam||0;            // varas² por lote (del módulo 3)
+  const lotesInv = window.M3_lotesCant||0;                  // inventario COMPLETO del proyecto
+  const pmOn = !!window.PM_on;
+  const pv = pmOn ? Math.min(100,Math.max(0,window.PM_pctVendido||0)) : 0;
+  const pmFac = 1 - pv/100;
+  const lotesNuevos = lotesInv*pmFac;                       // lo que se vende NUEVO (el resto ya está vendido: clientes heredados)
+  const lotesYaVend = Math.max(0, lotesInv - lotesNuevos);
+  const lotV2 = window.M3_lotTam||0;                        // varas² por lote (del módulo 3)
   const anios = num("vtaAnios");
-  const meses = anios>0 ? Math.min(1200, anios*12) : 0;   // tope 1200 meses (100 años): evita congelar el motor con un plazo a medio teclear
+  const meses = anios>0 ? Math.min(1200, anios*12) : 0;     // tope 1200 meses (100 años): evita congelar el motor con un plazo a medio teclear
 
-  // ritmo: lotes por mes (para vender todos en el plazo elegido)
-  const lotesMes = meses>0 ? lotesTotal/meses : 0;
+  // ritmo: lotes NUEVOS por mes (los heredados ya se vendieron; no forman parte del ritmo de venta)
+  const lotesMes = meses>0 ? lotesNuevos/meses : 0;
+  const nLotStr = v => (Math.abs(v-Math.round(v))<0.05)?N(v):N1(v);   // entero si es exacto; si no, 1 decimal
 
-  // reparto por plan y totales
+  // reparto por plan. Se calculan DOS ingresos:
+  //  · ingresoTotal (inventario completo) → window.M4_ingresoTotal, que el motor usa como valor unitario y guardián,
+  //    y del que Costos deriva la comisión reduciéndolo por el % vendido. NO debe cambiar.
+  //  · ingresoNuevo (solo lo que se vende nuevo) → es lo que muestra este módulo cuando hay proyecto en marcha.
   const pctTotal = planes.reduce((a,p)=>a+(p.pct||0),0);
-  let ingresoTotal=0, primaTotal=0, saldoTotal=0;
+  let ingresoTotal=0, ingresoNuevo=0, primaNuevo=0, saldoNuevo=0;
   planes.forEach(p=>{
-    const lotesPlan = lotesTotal * (p.pct||0)/100;      // cuántos lotes en este plan
-    const valorLote = lotV2 * (p.precioVara||0);        // valor de un lote en este plan
-    const valorPlan = lotesPlan * valorLote;            // ingreso total del plan
-    ingresoTotal += valorPlan;
+    const valorLote = lotV2 * (p.precioVara||0);            // valor de un lote en este plan
+    ingresoTotal += (lotesInv*(p.pct||0)/100) * valorLote;  // inventario completo (referencia)
+    const valorPlan = (lotesNuevos*(p.pct||0)/100) * valorLote;   // este plan, sobre las ventas nuevas
+    ingresoNuevo += valorPlan;
     if(esContado(p)){
-      primaTotal += valorPlan;                           // contado: todo entra como pago
+      primaNuevo += valorPlan;                              // contado: todo entra como pago
     }else{
       const prima = valorPlan * (p.primaPct||0)/100;
-      primaTotal += prima;
-      saldoTotal += valorPlan - prima;
+      primaNuevo += prima;
+      saldoNuevo += valorPlan - prima;
     }
   });
 
   // datos que este módulo entrega a la proyección (solo lectura)
-  window.M4_ingresoTotal = ingresoTotal;
-  window.M4_primaTotal = primaTotal;
-  window.M4_saldoFinanciar = saldoTotal;
+  window.M4_ingresoTotal = ingresoTotal;    // FULL (inventario completo) — no cambiar: motor + precios unitarios lo usan así
+  window.M4_primaTotal = primaNuevo;        // primas de ventas nuevas (lo que realmente entra por venta nueva)
+  window.M4_saldoFinanciar = saldoNuevo;
   window.M4_lotesMes = lotesMes;
   window.M4_mesesVenta = meses;
   window.M4_planes = planes;
   window.M4_flujoMode = ventaFlujoMode;   // ritmo de venta: 'plano' | 'rampa'
 
-  const precioProm = lotesTotal>0 ? ingresoTotal/lotesTotal : 0;
+  const precioProm = lotesInv>0 ? ingresoTotal/lotesInv : 0;
 
-  // resultados
-  if($("rVtaLotesTotal")) $("rVtaLotesTotal").textContent = lotesTotal>0 ? N(lotesTotal) : "—";
+  // resultados (reflejan las ventas NUEVAS; los heredados van aparte, en Proyecto en marcha)
+  const notaYa = (pmOn && lotesYaVend>0.05) ? ` <span style="font-size:11px;color:var(--faint)">de ${N(lotesInv)} · ${nLotStr(lotesYaVend)} ya vendidos</span>` : '';
+  if($("rVtaLotesTotal")) $("rVtaLotesTotal").innerHTML = lotesNuevos>0.05 ? (nLotStr(lotesNuevos)+notaYa) : (pmOn&&lotesInv>0 ? `0 <span style="font-size:11px;color:var(--faint)">(todo ya vendido)</span>` : "—");
   if($("rVtaLotesMes")) $("rVtaLotesMes").textContent = lotesMes>0 ? N1(lotesMes) : "—";
-  if($("rVtaIngreso")) $("rVtaIngreso").textContent = ingresoTotal>0 ? L(ingresoTotal) : "—";
-  if($("rVtaPrimas")) $("rVtaPrimas").textContent = primaTotal>0 ? L(primaTotal) : "—";
-  if($("rVtaSaldo")) $("rVtaSaldo").textContent = saldoTotal>0 ? L(saldoTotal) : "—";
+  if($("rVtaIngreso")) $("rVtaIngreso").textContent = ingresoNuevo>0 ? L(ingresoNuevo) : "—";
+  if($("rVtaIngresoNota")) $("rVtaIngresoNota").textContent = (pmOn && lotesYaVend>0.05) ? "solo ventas nuevas (los ya vendidos van en Proyecto en marcha)" : "suma de todos los lotes";
+  if($("rVtaPrimas")) $("rVtaPrimas").textContent = primaNuevo>0 ? L(primaNuevo) : "—";
+  if($("rVtaSaldo")) $("rVtaSaldo").textContent = saldoNuevo>0 ? L(saldoNuevo) : "—";
 
   // KPIs
   if($("kVtaIngreso")){
-    $("kVtaIngreso").textContent = ingresoTotal>0 ? L(ingresoTotal) : "—";
-    $("kVtaPrimas").textContent = primaTotal>0 ? L(primaTotal) : "—";
-    $("kVtaSaldo").textContent = saldoTotal>0 ? L(saldoTotal) : "—";
+    $("kVtaIngreso").textContent = ingresoNuevo>0 ? L(ingresoNuevo) : "—";
+    if($("kVtaIngresoNota")) $("kVtaIngresoNota").textContent = (pmOn && lotesYaVend>0.05) ? "solo ventas nuevas" : "todos los lotes";
+    $("kVtaPrimas").textContent = primaNuevo>0 ? L(primaNuevo) : "—";
+    $("kVtaSaldo").textContent = saldoNuevo>0 ? L(saldoNuevo) : "—";
     $("kVtaLotesMes").textContent = lotesMes>0 ? N1(lotesMes) : "—";
     $("kVtaLotesMesNota").textContent = anios>0 ? `en ${N(anios)} años` : "ritmo de venta";
   }
 
   // alertas: solo cuando algo no cuadra
   let avisos=[];
-  if(lotesTotal===0){
+  if(lotesInv===0){
     avisos.push(`Aún no hay lotes. Defínelos en el módulo <strong>Lotificación</strong>.`);
   }else{
     if(Math.abs(pctTotal-100)>0.1) avisos.push(`Los porcentajes de los planes suman <strong>${N1(pctTotal)}%</strong>, deben sumar 100%.`);
@@ -2526,16 +2563,16 @@ function calcVentas(){
   // verificación
   let vv="";
   const row=t=>`<div>${t}</div>`;
-  if(lotesTotal===0 || ingresoTotal===0){
+  if(lotesInv===0 || ingresoTotal===0){
     vv=row(`Define los lotes (módulo 3), el precio de cada plan y los años de venta para ver los números.`);
   }else{
-    if(window.PM_on && (window.PM_pctVendido||0)>0.5){ const pv=Math.min(100,Math.max(0,window.PM_pctVendido||0));
-      vv+=row(`<div class="note" style="margin:0 0 6px">★ Proyecto en marcha: el <b>${N1(pv)}%</b> ya está vendido (clientes heredados, se proyectan aparte, sin comisión). Los totales de aquí abajo son del <b>inventario completo</b>; la proyección vende y comisiona solo el <b>${N1(100-pv)}%</b> nuevo.</div>`); }
-    vv+=row(`<b>Lotes a vender:</b> ${N(lotesTotal)} · de ${NV2(lotV2)} cada uno`);
-    vv+=row(`<b>Ritmo:</b> ${N(lotesTotal)} ÷ ${N(meses)} meses = <b>${N1(lotesMes)} lotes/mes</b>${ventaFlujoMode==='rampa'?` <span style="color:var(--faint)">(promedio — ritmo orgánico: menos al inicio, más al centro)</span>`:``} (${N(anios)} años)`);
+    if(pmOn && pv>0.5){
+      vv+=row(`<div class="note" style="margin:0 0 6px">★ Proyecto en marcha: <b>${nLotStr(lotesYaVend)}</b> lote(s) (${N1(pv)}%) ya están vendidos y se proyectan como <b>clientes heredados</b> (siguen pagando su saldo, sin comisión). Aquí abajo se venden los <b>${nLotStr(lotesNuevos)}</b> nuevos (${N1(100-pv)}%).</div>`); }
+    vv+=row(`<b>Lotes a vender:</b> ${nLotStr(lotesNuevos)}${pmOn&&lotesYaVend>0.05?` <span style="color:var(--faint)">(de ${N(lotesInv)} del proyecto)</span>`:''} · de ${NV2(lotV2)} cada uno`);
+    vv+=row(`<b>Ritmo:</b> ${nLotStr(lotesNuevos)} ÷ ${N(meses)} meses = <b>${N1(lotesMes)} lotes/mes</b>${ventaFlujoMode==='rampa'?` <span style="color:var(--faint)">(promedio — ritmo orgánico: menos al inicio, más al centro)</span>`:``} (${N(anios)} años)`);
     vv+=row(`&nbsp;`);
     planes.forEach(p=>{
-      const lotesPlan=lotesTotal*(p.pct||0)/100, valorLote=lotV2*(p.precioVara||0), valorPlan=lotesPlan*valorLote;
+      const lotesPlan=lotesNuevos*(p.pct||0)/100, valorLote=lotV2*(p.precioVara||0), valorPlan=lotesPlan*valorLote;
       if(esContado(p)){
         vv+=row(`<b>${p.nombre}</b> (${N1(p.pct)}%): ${N1(lotesPlan)} lotes × ${L(valorLote)} = ${L(valorPlan)} — contado`);
       }else{
@@ -2544,8 +2581,8 @@ function calcVentas(){
       }
     });
     vv+=row(`&nbsp;`);
-    vv+=row(`<b>Ingreso total:</b> ${L(ingresoTotal)}`);
-    vv+=row(`<b>Primas (al vender):</b> ${L(primaTotal)} · <b>Saldo a financiar:</b> ${L(saldoTotal)}`);
+    vv+=row(`<b>Ingreso por ventas nuevas:</b> ${L(ingresoNuevo)}${pmOn&&lotesYaVend>0.05?` <span style="color:var(--faint)">· los lotes ya vendidos aportan aparte (ver Proyecto en marcha / Resumen)</span>`:''}`);
+    vv+=row(`<b>Primas (al vender):</b> ${L(primaNuevo)} · <b>Saldo a financiar:</b> ${L(saldoNuevo)}`);
   }
   if($("verifVentas")) $("verifVentas").innerHTML=vv;
   // refrescar la tabla para actualizar prima L y cuota mensual, salvo si el usuario está escribiendo en ella
@@ -2564,23 +2601,43 @@ function initSalarios(){ if(salarios===null) salarios=[
 function renderSalarios(){
   const b=$("salBody"); if(!b) return; initSalarios(); b.innerHTML="";
   const socList = (typeof socios!=='undefined'&&Array.isArray(socios)) ? socios : [];
+  const socNoms = socList.map(so=>(so&&so.nombre||'').trim()).filter(Boolean);
   salarios.forEach((s,i)=>{
-    const si = Number.isInteger(s.socio) ? s.socio : -1;
-    const socOpts = ['<option value="-1">— (empleado)</option>'].concat(
-      socList.map((so,k)=>`<option value="${k}"${si===k?' selected':''}>${(so.nombre||('Socio '+(k+1))).replace(/"/g,'&quot;').slice(0,18)}</option>`)).join('');
+    // ¿esta línea coincide, por nombre, con un socio? (para resaltar el enlace)
+    const enlazaSocio = socNoms.length>0 && socioDeLinea(s.nombre)>=0;
+    const nomTit = enlazaSocio
+      ? 'Coincide con un socio: su sueldo y viáticos se suman a las ganancias del socio en el Resumen.'
+      : 'Nombre de la persona. Si escribes el nombre de un socio, su sueldo y viáticos se le atribuyen en el Resumen.';
     const tr=document.createElement("tr");
     tr.innerHTML=`
-      <td><input type="text" value="${(s.nombre||'').replace(/"/g,'&quot;')}" oninput="updSalario(${i},'nombre',this.value,'txt')" style="min-width:110px;text-align:left"></td>
+      <td><input type="text" value="${(s.nombre||'').replace(/"/g,'&quot;')}" oninput="updSalario(${i},'nombre',this.value,'txt')" style="min-width:110px;text-align:left${enlazaSocio?';border-color:var(--teal);color:var(--teal)':''}" title="${nomTit}"></td>
       <td><input type="number" value="${s.sueldo||0}" oninput="updSalario(${i},'sueldo',this.value)" style="max-width:100px"></td>
       <td><input type="number" value="${s.viaticos||0}" oninput="updSalario(${i},'viaticos',this.value)" style="max-width:100px"></td>
       <td><input type="number" min="1" class="noSpin" value="${Math.max(1,Math.round(s.inicioMes||1))}" oninput="updSalario(${i},'inicioMes',this.value)" style="max-width:52px;text-align:right" title="Desde qué mes se empieza a pagar este sueldo (1 = desde el inicio)"></td>
-      <td><select onchange="updSalario(${i},'socio',this.value,'int')" style="max-width:120px;font-size:11px" title="Enlaza esta línea a un socio para sumar su sueldo y beneficios en el Resumen detallado">${socOpts}</select></td>
       <td style="text-align:center"><button class="rowdel" onclick="delSalario(${i})" title="Quitar">×</button></td>`;
     b.appendChild(tr);
   });
 }
-function updSalario(i,k,v,tipo){ salarios[i][k]= tipo==='txt'?v:(tipo==='int'?Math.round(parseFloat(v)) : (k==='inicioMes'?Math.max(1,Math.round(parseFloat(v)||1)):(parseFloat(v)||0))); calcCostos(); }
-function addSalario(){ initSalarios(); salarios.push({nombre:"", sueldo:0, viaticos:0, inicioMes:1, socio:-1}); renderSalarios(); calcCostos(); }
+// Atribución de salario a un socio POR NOMBRE (sin columna aparte): la línea de salario
+// se enlaza al socio cuyo nombre coincide con el de la persona. Coincidencia robusta:
+// normaliza (minúsculas, sin acentos, sin dobles espacios) y acepta igualdad exacta o
+// que el nombre de la línea EMPIECE por el nombre del socio en frontera de palabra
+// (p. ej. "Ana", "Ana Gómez" o "Ana (socia)" enlazan con el socio "Ana").
+function _normNom(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim(); }
+function socioDeLinea(nombreLinea){
+  const socList = (typeof socios!=='undefined'&&Array.isArray(socios)) ? socios : [];
+  const n = _normNom(nombreLinea); if(!n) return -1;
+  let best=-1, bestLen=-1;
+  socList.forEach((so,k)=>{
+    const sn=_normNom(so&&so.nombre); if(!sn) return;
+    const coincide = n===sn || n.startsWith(sn+' ') || n.startsWith(sn+'(') || n.startsWith(sn+',');
+    // el más largo gana (si un socio se llama "Ana" y otro "Ana María", prioriza la coincidencia más específica)
+    if(coincide && sn.length>bestLen){ best=k; bestLen=sn.length; }
+  });
+  return best;
+}
+function updSalario(i,k,v,tipo){ salarios[i][k]= tipo==='txt'?v:(k==='inicioMes'?Math.max(1,Math.round(parseFloat(v)||1)):(parseFloat(v)||0)); calcCostos(); }
+function addSalario(){ initSalarios(); salarios.push({nombre:"", sueldo:0, viaticos:0, inicioMes:1}); renderSalarios(); calcCostos(); }
 function delSalario(i){ if(salarios.length<=1) return; salarios.splice(i,1); renderSalarios(); calcCostos(); }
 
 // ===== Cargas patronales (IHSS, INFOP, RAP) — se calculan empleado por empleado, con el techo del IHSS =====
@@ -4055,7 +4112,8 @@ function setResumenDetalle(m){
 }
 // beneficios que recibe CADA SOCIO por la planilla enlazada (sueldo + viáticos + aguinaldos), calculados con la
 // misma línea de tiempo del motor (desde el mes de inicio de cada persona hasta los meses de planilla). No incluye
-// las cargas patronales (esas van al IHSS/RAP, no al bolsillo del socio). El "¿Socio?" de cada línea define el enlace.
+// las cargas patronales (esas van al IHSS/RAP, no al bolsillo del socio). El enlace es POR NOMBRE: si la persona de
+// la línea se llama igual que un socio (socioDeLinea), su sueldo y viáticos se atribuyen a ese socio.
 function beneficiosPorSocio(){
   const noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
   const per=new Array(nSoc).fill(0);
@@ -4064,7 +4122,7 @@ function beneficiosPorSocio(){
   const agu=!!window.M5_aguinaldos;
   const sal=(typeof salarios!=='undefined'&&Array.isArray(salarios))?salarios:[];
   planilla.forEach((p,i)=>{
-    const si=(sal[i]&&Number.isInteger(sal[i].socio))?sal[i].socio:-1;
+    const si=(sal[i]!=null)?socioDeLinea(sal[i].nombre):-1;
     if(si<0||si>=nSoc) return;
     for(let m=Math.max(1,p.inicioMes||1); m<=pm; m++){ const cm=((m-1)%12)+1;
       per[si]+=(p.sueldo||0)+(p.viaticos||0);
@@ -4123,6 +4181,19 @@ function svgVentasPorAnio(M){
     <div style="display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;font-size:10.5px;color:var(--muted)"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0E7C66;display:inline-block"></span>Lotes nuevos por año (izq.)</span><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:14px;height:0;border-top:2px solid #B4541F;display:inline-block"></span>Acumulado (der.)</span></div>${preNota}`;
 }
 
+// por socio: salario mensual (suma de sus líneas de planilla enlazadas) y el mes en que empieza a recibirlo
+function salarioMensualPorSocio(){
+  const noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
+  const mens=new Array(nSoc).fill(0), desde=new Array(nSoc).fill(0);
+  const sal=(typeof salarios!=='undefined'&&Array.isArray(salarios))?salarios:[];
+  sal.forEach(s=>{ const si=socioDeLinea(s&&s.nombre); if(si<0||si>=nSoc) return;
+    const monto=(s.sueldo||0)+(s.viaticos||0); if(monto<=0) return;
+    mens[si]+=monto;
+    const ini=Math.max(1,Math.round(s.inicioMes||1));
+    desde[si] = desde[si]===0 ? ini : Math.min(desde[si], ini);
+  });
+  return {mens, desde};
+}
 function renderResumenProy(M){
   const c=$("resumenProy"); if(!c) return;
   if(!M){ c.innerHTML=`<div class="note" style="margin:0">Completa los módulos 1 a 6 para generar el resumen.</div>`; return; }
@@ -4198,47 +4269,140 @@ function renderResumenProy(M){
   const leyenda=`<div style="display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:9px;font-size:10.5px;color:var(--muted)">`+
     segs.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${s.c};display:inline-block"></span>${s.l} · <b style="font-family:var(--mono);color:var(--ink)">${L(s.v)}</b> (${(s.v/segTot*100).toFixed(0)}%)</span>`).join('')+`</div>`;
 
+  // ---- condiciones del escenario (encabezado, para saber qué se está leyendo) ----
+  const pctVend = terrV2>0 ? areaVend/terrV2*100 : 0;
+  const pctNoVend = terrV2>0 ? Math.max(0,100-pctVend) : 0;
+  const lotesVendidos = window.PM_on ? lotes*Math.min(100,Math.max(0,window.PM_pctVendido||0))/100 : 0;
+  const lotesLibres = Math.max(0, lotes - lotesVendidos);
+  const nLotR = v => (Math.abs(v-Math.round(v))<0.05)?N(v):N1(v);
+  const condA=['Lotificación', terrTamTxt];
+  if(terrV2>0) condA.push(`${N1(pctVend)}% vendible · ${N1(pctNoVend)}% no vendible`);
+  condA.push(`${N(lotes)} lotes${(window.PM_on&&lotesVendidos>0.05)?` (${nLotR(lotesLibres)} por vender · ${nLotR(lotesVendidos)} ya vendidos)`:''}`);
+  if(usuario) condA.push(usuario);
+  if(fecha) condA.push(fecha);
+  const condTxt=condA.join(' · ');
+  // dato de negociación (proyecto en marcha): de lo que el dueño ya cobró, cuánto va a favor del comprador
+  const pmActivo = !!window.PM_on;
+  const pmFavorPct = pmActivo ? Math.min(100,Math.max(0,num('pmFavorPct'))) : 0;
+  const pmCobradoDueno = pmActivo ? ((window._pmCartera && window._pmCartera.v && window._pmCartera.v.C)||0) : 0;
+  const pmFavorComprador = pmActivo ? (window.PM_favorComprador||0) : 0;
+  const pmNego = (pmActivo && (pmCobradoDueno>0.5 || pmFavorComprador>0.5))
+    ? `<div style="margin-top:12px;background:var(--teal-soft);border:1px solid #BFE0D7;border-radius:9px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:5px 20px;align-items:baseline">
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--teal);font-weight:700">Ajuste por ventas previas a la compra</span>
+        <span style="font-size:12px;color:var(--muted)">El dueño ya cobró <b style="color:var(--ink);font-family:var(--mono)">${L(pmCobradoDueno)}</b></span>
+        <span style="font-size:12px;color:var(--muted)">A favor del comprador: <b style="color:var(--teal)">${N1(pmFavorPct)}%</b> = <b style="color:var(--teal);font-family:var(--mono)">${L(pmFavorComprador)}</b> <span style="color:var(--faint)">(reduce tu costo de compra)</span></span></div>`
+    : '';
+  // resultado por socio (un valor representativo, sin nombres): utilidad por socio + salario/viáticos de socios en planilla
+  const gxs = nSoc>0 ? gananciaSocios/nSoc : gananciaSocios;
+  const _smG = (typeof salarioMensualPorSocio==='function') ? salarioMensualPorSocio() : {mens:[]};
+  const salSocMes = (_smG.mens||[]).reduce((a,b)=>a+(b||0),0);   // salario + viáticos mensual que suman los socios en planilla
+
   let h=`<div class="rp-doc">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap">
       <div style="min-width:0"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:700;margin-bottom:2px">Resumen de proyección</div>
         <div class="rp-title">${proyNombre}</div>
-        <div class="rp-sub">Lotificación · ${terrTamTxt} · ${N(lotes)} lotes${usuario?` · ${usuario}`:''}${fecha?` · ${fecha}`:''}</div></div>
-      <div style="text-align:right;min-width:175px">
+        <div class="rp-sub">${condTxt}</div></div>
+      <div style="text-align:right;min-width:200px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700">Ganancia del proyecto</div>
         <div style="font-size:31px;font-weight:800;font-family:var(--mono);color:${neg?'var(--clay)':'var(--teal)'};line-height:1">${L(utilidad)}</div>
         <div style="font-size:11px;color:var(--muted)">margen ${N1(margen)}% <span style="color:var(--faint)">(ganancia ÷ ventas)</span></div>
+        ${!DET?`<div style="font-size:11px;color:var(--muted);margin-top:5px">deriva en <b style="color:var(--purple)">ahorro ${L(reserva)}</b> <span style="color:var(--faint)">para reinversión</span></div>`:''}
       </div>
     </div>
-    <div class="rp-hero">
-      ${kpi('Ingreso por ventas', L(ingreso), 'var(--ink)', `${N(lotes)} lotes · ~${aniosVenta} años`)}
-      ${kpi('Costo total', L(costosTot), 'var(--ink)', 'terreno, desarrollo, operación e impuestos')}
-      ${kpi('Ganancia de la sociedad', L(gananciaSocios), 'var(--teal)', 'utilidad repartida entre socios')}
-      ${kpi('Reserva de reinversión', L(reserva), 'var(--purple)', 'utilidad retenida en la empresa')}
-    </div>
-    <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">1</span><span class="rp-sec-t">El terreno</span></div>
+    <div class="rp-hero">${ DET
+      ? `${kpi('Inversión inicial', L(invTotal), 'var(--ink)', 'aporte de socios + préstamos')}${kpi('Ingreso por ventas', L(ingreso), 'var(--ink)', `${N(lotes)} lotes · ~${aniosVenta} años`)}${kpi('Ganancia de la sociedad', L(gananciaSocios), 'var(--teal)', 'utilidad repartida entre socios')}${kpi('Reserva de reinversión', L(reserva), 'var(--purple)', 'ahorro para reinversión')}`
+      : `${kpi('Inversión inicial', L(invTotal), 'var(--ink)', 'aporte de socios + préstamos')}${kpi('Ingreso por ventas', L(ingreso), 'var(--ink)', `${N(lotes)} lotes · ~${aniosVenta} años`)}${kpi('Gastos del proyecto', L(costosTot), 'var(--clay)', 'terreno, desarrollo, operación e impuestos')}`
+    }</div>`;
+
+  if(!DET){
+    // ===== NORMAL (resumido), en orden cronológico: inversión → ajuste de compra → ganancia por socio → tiempo =====
+    const devSocios=window.M1_devolucionSocios||0;
+    const rotulo = t=>`<span style="color:var(--faint);text-transform:uppercase;font-size:9.5px;letter-spacing:.04em;font-weight:700">${t}</span>`;
+    const invParts=[`aporte de socios <b style="color:var(--ink)">${L(capital)}</b>`];
+    if(prest>0.5) invParts.push(`préstamo <b style="color:var(--ink)">${L(prest)}</b>`);
+    if(devSocios>0.5) invParts.push(`se les devuelve <b style="color:var(--ink)">${L(devSocios)}</b>${hit.socios>0?` <span style="color:var(--faint)">(${anioTxt(hit.socios)})</span>`:''}`);
+    h+=`<div style="margin-top:11px;font-size:12px;color:var(--muted);line-height:1.7"><div>${rotulo('Inversión inicial')} &nbsp;${invParts.join(' · ')}</div></div>`;
+    h += pmNego;   // ajuste por ventas previas a la compra (cronológicamente, al adquirir)
+    // ===== GANANCIAS DE SOCIOS (lo más relevante): utilidad (el margen verde de la gráfica), en cuántos años,
+    //       y el salario mensual + su periodo. Si TODOS los socios ganan lo mismo, NO se enumeran: se muestra
+    //       un solo valor (se entiende que es lo que gana cada uno). Solo se listan uno por uno si difieren. =====
+    if(nSoc){
+      const planMeses=Math.max(0,Math.round(window.M5_planillaMeses||0));
+      const smMens=_smG.mens||[], smDesde=_smG.desde||[];
+      const anioTxtG=dur===1?'año':'años';
+      const utilArr=noms.map((_,i)=>gananciaInd[i]||0);
+      const mensArr=noms.map((_,i)=>smMens[i]||0);
+      const desdeArr=noms.map((_,i)=>Math.max(1,Math.round(smDesde[i]||1)));
+      const salLineaTxt=(mensual,desdeM,porSocio)=>{
+        if(!(mensual>0.5 && planMeses>0)) return '';
+        const ini=Math.max(1,Math.round(desdeM||1)), finM=Math.max(ini,planMeses), nMeses=finM-ini+1, aniosSal=Math.round(nMeses/12*10)/10;
+        const periodo=`${ini===1?'desde el mes 1':'mes '+ini} al ${finM}${aniosSal>=1?` · ~${aniosSal} ${aniosSal===1?'año':'años'}`:` · ${nMeses} meses`}`;
+        return `<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Salario y viáticos <b style="color:var(--ink);font-family:var(--mono)">${L(mensual)}</b>/mes${porSocio?' por socio':''} <span style="color:var(--faint)">(${periodo})</span></div>`;
+      };
+      // ¿ganan todos lo mismo? (misma utilidad, mismo salario y, si hay salario, mismo periodo)
+      const eq=(a,b)=>Math.abs(a-b)<=Math.max(1,Math.abs(a)*0.005);
+      const todosIguales = noms.every((_,i)=> eq(utilArr[i],utilArr[0]) && eq(mensArr[i],mensArr[0]) && (mensArr[i]<=0.5 || desdeArr[i]===desdeArr[0]) );
+      let cuerpo, descr;
+      if(todosIguales){
+        // un solo valor, sin enumerar a cada socio
+        const partTxt = nSoc>1 ? `<span style="font-weight:400;color:var(--faint);font-size:10.5px"> · ${nSoc} socios · ${N1(parts[0]||0)}% c/u</span>` : '';
+        const titulo = nSoc>1 ? `Todos los socios reciben lo mismo${partTxt}` : `El socio recibe`;
+        cuerpo = `<div style="padding:9px 0 2px">
+            <div style="font-weight:700;color:var(--ink);font-size:12.5px">${titulo}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Utilidad <b style="color:var(--teal);font-family:var(--mono);font-size:14px">${L(utilArr[0])}</b> <span style="color:var(--faint)">${nSoc>1?'por socio, ':''}repartida en ~${dur} ${anioTxtG}</span></div>
+            ${salLineaTxt(mensArr[0],desdeArr[0],nSoc>1)}
+          </div>`;
+        descr = `La utilidad (el margen verde de la gráfica) que recibe cada socio${mensArr[0]>0.5?', y su salario mensual':''}.`;
+      } else {
+        // difieren: se listan uno por uno
+        cuerpo = noms.map((nm,i)=>{
+          const col=SOCIO_COLS[i%SOCIO_COLS.length];
+          return `<div style="display:flex;gap:9px;padding:9px 0;border-top:1px solid #CFE4DD">
+            <span style="width:9px;height:9px;border-radius:2px;background:${col};flex:none;margin-top:4px"></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;color:var(--ink);font-size:12.5px">${(nm||('Socio '+(i+1)))} <span style="font-weight:400;color:var(--faint);font-size:10.5px">· ${N1(parts[i]||0)}% de participación</span></div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Utilidad <b style="color:var(--teal);font-family:var(--mono);font-size:13px">${L(utilArr[i])}</b> <span style="color:var(--faint)">repartida en ~${dur} ${anioTxtG}</span></div>
+              ${salLineaTxt(mensArr[i],desdeArr[i],false)}
+            </div></div>`;
+        }).join('');
+        descr = `Lo que recibe cada socio: la utilidad (el margen verde de la gráfica) y, si está en planilla, su salario mensual y el periodo en que lo percibe.`;
+      }
+      h+=`<section class="rp-sec" style="margin-top:13px;background:var(--teal-soft);border:1px solid #BFE0D7;border-radius:11px;padding:12px 15px">
+        <div class="rp-sec-h" style="border:none;margin:0 0 2px"><span class="rp-sec-n" style="background:var(--teal);color:#fff">$</span><span class="rp-sec-t" style="color:var(--teal)">Ganancias de socios</span></div>
+        <div style="font-size:10.5px;color:var(--muted);margin:0 0 2px">${descr}</div>
+        ${cuerpo}</section>`;
+    }
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Tiempo</span></div>
+      <div class="rp-tl">${tl('Duración total', `${dur} años`)}${tl('Terreno pagado', anioTxt(hit.dueno))}${tl('Desarrollo completo', anioTxt(hit.desa))}${tl('Primera ganancia', anioTxt(hit.ganancia))}${prest>0?tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no terminan'):''}</div></section>`;
+  } else {
+    h += pmNego;   // ajuste por ventas previas a la compra (detallado)
+    // ===== DETALLADO: el desglose completo =====
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">1</span><span class="rp-sec-t">El terreno</span></div>
       <div class="rp-row">${item('Tamaño del terreno', terrTamTxt)}${item('Lotes a vender', `${N(lotes)} <span style="font-size:11px;color:var(--faint)">de ${N(lotTam)} v²</span>`)}${item('Costo del terreno', L(desembTerreno), true)}</div></section>
     <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">2</span><span class="rp-sec-t">La inversión</span></div>
       <div class="rp-row">${item('Capital de socios', L(capital))}${item('Préstamos', L(prest))}${item('Inversión inicial', L(invTotal), true)}${item('Inversión en desarrollo', L(desa))}</div>
-      ${DET&&nSoc?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Aporte inicial por socio: `+aportes.map((a,i)=>`<b style="color:var(--ink)">${noms[i]||('Socio '+(i+1))}</b> ${L(a)}`).join(' · ')+`</div>`:''}</section>
+      ${nSoc?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Aporte inicial por socio: `+aportes.map((a,i)=>`<b style="color:var(--ink)">${noms[i]||('Socio '+(i+1))}</b> ${L(a)}`).join(' · ')+`</div>`:''}</section>
     <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">3</span><span class="rp-sec-t">Las ventas</span></div>
       <div class="rp-row">${item('Precio promedio por lote', L(precioLote))}${item('Ingreso total por ventas', L(ingreso), true)}${item('Tiempo de venta', `${aniosVenta} años`)}</div>
-      ${DET?`<div class="rp-row" style="margin-top:8px">${item('Precio por vara (vendible)', L(precioVaraVend))}${item('Precio por vara (todo el terreno)', L(precioVaraTerr))}${item('Costo por vara del terreno', L(costoVaraTerr))}</div>`:''}</section>
+      <div class="rp-row" style="margin-top:8px">${item('Precio por vara (vendible)', L(precioVaraVend))}${item('Precio por vara (todo el terreno)', L(precioVaraTerr))}${item('Costo por vara del terreno', L(costoVaraTerr))}</div></section>
     <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">4</span><span class="rp-sec-t">Distribución del dinero</span></div>
       ${barra}${leyenda}</section>
     <section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">5</span><span class="rp-sec-t">El resultado</span></div>
       <div class="rp-row">${item('Ganancia del proyecto', L(utilidad), true)}${item('Margen', `${N1(margen)}%`)}${item('Ganancia de la sociedad', L(gananciaSocios))}${item('Reserva de reinversión', L(reserva))}</div>
-      ${DET ? perSocioTabla() : (parts.length?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Ganancia individual: `+parts.map((p,i)=>`<b style="color:var(--ink)">${noms[i]||('Socio '+(i+1))}</b> ${L(gananciaSocios*p/100)} <span style="color:var(--faint)">(${N1(p)}%)</span>`).join(' · ')+`</div>`:'')}</section>`;
-  const tlItems=[tl('Duración total', `${dur} años`), tl('Terreno pagado', anioTxt(hit.dueno)), tl('Desarrollo completo', anioTxt(hit.desa)), tl('Primera ganancia', anioTxt(hit.ganancia))];
-  if(prest>0) tlItems.push(tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no se terminan'));
-  if(soc>0) tlItems.push(tl('Capital devuelto a socios', anioTxt(hit.socios)));
-  h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">6</span><span class="rp-sec-t">Línea de tiempo</span></div>
+      ${perSocioTabla()}</section>`;
+    const tlItems=[tl('Duración total', `${dur} años`), tl('Terreno pagado', anioTxt(hit.dueno)), tl('Desarrollo completo', anioTxt(hit.desa)), tl('Primera ganancia', anioTxt(hit.ganancia))];
+    if(prest>0) tlItems.push(tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no se terminan'));
+    if(soc>0) tlItems.push(tl('Capital devuelto a socios', anioTxt(hit.socios)));
+    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">6</span><span class="rp-sec-t">Línea de tiempo</span></div>
       <div class="rp-tl">${tlItems.join('')}</div></section>`;
+  }
 
   if(DET){
     // ◆ Salario y beneficios (nivel de proyecto)
     h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Salario y beneficios</span></div>
       <div class="rp-row">${item('Salario mensual (planilla)', L(salarioMensual))}${item('Aguinaldos (13.º y 14.º)', aguinaldosOn?`${L(sueldosMes*2)}/año`:'no aplican')}${item('Viáticos', viaticosMes>0?`${L(viaticosMes)}/mes`:'—')}${item('Prestaciones de socios', segTotSoc>0.5?L(segTotSoc):'—')}</div>
-      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">Costo total de planilla en el proyecto: <b>${L(T.sal||0)}</b>${segTotSoc>0.5?` · prestaciones (seguro médico + RAP voluntario): <b>${L(segTotSoc)}</b>, beneficio de los socios`:''}. Enlaza cada sueldo a su socio en <b>Costos → Salarios (¿Socio?)</b> para verlo por socio arriba.</div></section>`;
+      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">Costo total de planilla en el proyecto: <b>${L(T.sal||0)}</b>${segTotSoc>0.5?` · prestaciones (seguro médico + RAP voluntario): <b>${L(segTotSoc)}</b>, beneficio de los socios`:''}. Para atribuir un sueldo a un socio, escribe en <b>Costos → Salarios</b> el mismo nombre del socio; así se le suma en sus ganancias arriba.</div></section>`;
+
     // ◆ Gráficas
     h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Ganancias por año y acumulado</span></div>
       ${svgGananciasPorAnio(M)}</section>`;
@@ -4288,10 +4452,17 @@ function capturarComparativa(nombre, M){
   const capital=window.M1_capitalTotal||0, prest=M.prestamoTotal||0, inv=capital+prest;
   const ingreso=M.sumIngreso||0, ingVentas=window.M4_ingresoTotal||0;
   const gananciaSocios=M.anual.reduce((s,a)=>s+(a.ganancia||0),0);
+  const nSoc=(window.M1_nombresSocios||[]).length;
+  const gxs = nSoc>0 ? gananciaSocios/nSoc : gananciaSocios;   // ganancia (utilidad) por socio, un valor representativo
   const costoTotal=desembTerreno+(T.desa||0)+(T.sal||0)+(T.opex||0)+(T.seg||0)+(T.com||0)+(T.impuesto||0)+(T.prestInt||0);
   return { nombre, err:false, lotes, terrV2, unidad:(typeof unidadTerr!=='undefined'?unidadTerr:'v2'),
     inversion:inv, ingreso, precioVaraVend: areaVend>0?ingVentas/areaVend:0, precioVaraTerr: terrV2>0?ingreso/terrV2:0,
-    costoTotal, utilidad:M.utilidad||0, margen:M.margen||0, gananciaSocios, reserva:M.reservaFinal||0,
+    costoTotal, utilidad:M.utilidad||0, margen:M.margen||0, gananciaSocios, gxs, nSoc, reserva:M.reservaFinal||0,
+    ahorroPct: (typeof num==='function'?num("proyAhorro"):0),   // % de ahorro consignado (reinversión)
+    // proyecto en marcha: % de lo ya vendido que el dueño cede a favor del comprador (y su monto)
+    pmOn: !!window.PM_on,
+    pmFavorPct: (window.PM_on && typeof num==='function') ? Math.min(100,Math.max(0,num("pmFavorPct"))) : 0,
+    pmFavorComprador: window.PM_on ? (window.PM_favorComprador||0) : 0,
     retorno: inv>0?(M.utilidad||0)/inv*100:0, aniosVenta:Math.round((window.M4_mesesVenta||0)/12*10)/10,
     dur:Math.max(1,Math.ceil((M.H||12)/12)), primeraGanancia:(M.hitos&&M.hitos.ganancia)||0 };
 }
@@ -4331,22 +4502,31 @@ function pintarComparativa(cols){
   if(!valid.length){ c.innerHTML=`<div class="note warn" style="margin:0">No se pudo calcular ninguna de las proyecciones elegidas (¿les faltan datos?).</div>`; return; }
   const unidadTxt=x=> x.unidad==='mz' ? `${N1((x.terrV2||0)/V2_POR_MZ)} mz` : `${N(x.terrV2||0)} v²`;
   const anioT=m=> m>0 ? `Año ${Math.ceil(m/12)}` : '—';
-  // filas: [etiqueta, fn(x)->texto, clave-para-mini, mejorEs('max'|'min'|null), val(x)->número]
+  // filas: [etiqueta, fn(x)->texto, clave-para-resumida, mejorEs('max'|'min'|null), val(x)->número]
+  // Orden por IMPORTANCIA: primero lo que trae el resumen resumido (es la vista "Resumida"); el resto
+  // son datos secundarios que solo aparecen en la vista "Completa".
+  // ¿alguna proyección comparada tiene ajuste "a favor del comprador" (proyecto en marcha)?
+  const hayPMFavor = valid.some(x=>x && (x.pmFavorComprador>0.5 || (x.pmOn && (x.pmFavorPct||0)>0.01)));
   const rows=[
-    ['Terreno',                 x=>unidadTxt(x),               false, null,  null],
-    ['Lotes',                   x=>N(x.lotes),                 true,  null,  null],
-    ['Inversión inicial',       x=>L(x.inversion),             true,  'min', x=>x.inversion],
-    ['Ingreso por ventas',      x=>L(x.ingreso),               true,  'max', x=>x.ingreso],
-    ['Precio por vara (vendible)',x=>L(x.precioVaraVend),      false, null,  null],
-    ['Precio por vara (terreno)',x=>L(x.precioVaraTerr),       false, null,  null],
-    ['Costo total',             x=>L(x.costoTotal),            false, 'min', x=>x.costoTotal],
+    // ── lo importante (igual que el resumen resumido) ──
     ['Ganancia del proyecto',   x=>L(x.utilidad),              true,  'max', x=>x.utilidad],
     ['Margen',                  x=>N1(x.margen)+'%',           true,  'max', x=>x.margen],
-    ['Retorno sobre inversión', x=>N1(x.retorno)+'%',          true,  'max', x=>x.retorno],
-    ['Ganancia de la sociedad', x=>L(x.gananciaSocios),        false, 'max', x=>x.gananciaSocios],
-    ['Reserva de reinversión',  x=>L(x.reserva),               false, 'max', x=>x.reserva],
+    // ganancia individual: lo que recibe un socio de ganancias y en cuántos años
+    ['Ganancia por socio',      x=>`${L(x.gxs)} <span style="color:var(--faint);font-weight:400">· ~${x.dur} ${x.dur===1?'año':'años'}</span>`, true, 'max', x=>x.gxs],
+    // ahorro (reinversión): monto acumulado y el % de ahorro consignado
+    ['Ahorro (reinversión)',    x=>`${L(x.reserva)} <span style="color:var(--faint);font-weight:400">· ${N1(x.ahorroPct||0)}%</span>`, true, 'max', x=>x.reserva],
+    ['Inversión inicial',       x=>L(x.inversion),             true,  'min', x=>x.inversion],
+    // proyecto en marcha: % de lo ya vendido que el dueño cede a favor del comprador (reduce el costo de compra)
+    ...(hayPMFavor ? [
+      ['A favor del comprador', x=> x.pmOn ? `${N1(x.pmFavorPct||0)}% <span style="color:var(--faint);font-weight:400">· ${L(x.pmFavorComprador||0)}</span>` : '<span style="color:var(--faint)">—</span>', true, 'max', x=> x.pmOn ? (x.pmFavorPct||0) : 0]
+    ] : []),
+    ['Ingreso por ventas',      x=>L(x.ingreso),               true,  'max', x=>x.ingreso],
+    ['Gastos del proyecto',     x=>L(x.costoTotal),            true,  'min', x=>x.costoTotal],
+    ['Duración total',          x=>`${x.dur} años`,            true,  'min', x=>x.dur],
+    // ── datos secundarios (solo en la vista Completa) ──
+    ['Terreno',                 x=>unidadTxt(x),               false, null,  null],
+    ['Lotes',                   x=>N(x.lotes),                 false, null,  null],
     ['Tiempo de venta',         x=>`${x.aniosVenta} años`,     false, null,  null],
-    ['Duración total',          x=>`${x.dur} años`,            false, 'min', x=>x.dur],
     ['Primera ganancia',        x=>anioT(x.primeraGanancia),   false, null,  null]
   ].filter(r=> compModo==='full' || r[2]);
   const th=`text-align:right;padding:7px 10px;font-size:11px;font-weight:700;color:var(--ink);border-bottom:2px solid var(--line);white-space:nowrap`;
@@ -4735,7 +4915,7 @@ function pmToggle(on){
 }
 // CARTERA: escenario (llenas lo que sepas y se deduce el resto) vs datos reales (solo lo que consume la proyección)
 function setPMCarteraMode(m){
-  pmCarteraMode = (m==='real')?'real':'escenario';
+  pmCarteraMode = (m==='real')?'real':((m==='lotes')?'lotes':'escenario');
   calcPM();   // renderPMDisplay sincroniza botones, intro y oculta/muestra los campos de deducción
 }
 // DESARROLLO YA HECHO: por rubro (% por inciso) vs total real (L directo)
@@ -4874,7 +5054,11 @@ function pmCarteraRender(){
   const f=(x,dec)=> (x==null||!isFinite(x))?'' : (dec? (Math.round(x*10)/10).toLocaleString('es-HN') : Math.round(x).toLocaleString('es-HN'));
   const fPlain=(x,dec)=> (x==null||!isFinite(x))?'' : (dec? (Math.round(x*10)/10) : Math.round(x));
   // AUTO-LLENADO: las casillas que NO llenó el usuario se rellenan con el valor derivado (cursiva teal, marcadas 'auto'); al escribir encima se vuelven tuyas
+  // Los campos OCULTOS por el modo activo (p.ej. área/precios en "datos reales", o toda la cartera en "por lotes")
+  // NO se tocan: así lo que escribiste en el otro modo se conserva intacto al cambiar de switch.
+  const _vis = e => { for(let n=e; n; n=n.parentElement){ if(n.style && n.style.display==='none') return false; } return true; };
   const fill=(id,x,dec)=>{ const el=$(id), h=$(id+'_h'); if(!el) return;
+    if(!_vis(el)) return;   // oculto por el modo → preservar lo que el usuario ingresó (no sobreescribir ni borrar)
     if(isU[x]){ el.dataset.auto=''; el.style.color=''; el.style.fontStyle=''; if(h){ h.textContent='✓'; h.style.color='var(--faint)'; } return; }
     if(pmOn && v[x]!=null && isFinite(v[x]) && el!==document.activeElement){
       el.value=fPlain(v[x],dec); el.dataset.auto='1'; el.style.color='var(--teal)'; el.style.fontStyle='italic';
@@ -4901,6 +5085,57 @@ function pmCarteraRender(){
 function onPMDesaPct(i,val){ pmDesaPct[i]=Math.min(100,Math.max(0,parseFloat(val)||0)); calcPM(); }
 
 // inputs del módulo -> variables window.PM_* que leen calcTerreno y el motor
+// MODO "POR LOTES": separa lo ya vendido en CONTADO (cobrado al 100%) y CRÉDITO (se estima lo cobrado hasta hoy).
+// Del crédito, un lote vendido hace 'age' meses ya pagó su prima + min(cuota×age, saldo financiado); las ventas
+// se reparten con la misma curva ascendente del ritmo de venta ('rampa') sobre los meses transcurridos.
+function pmLotesEstimar(){
+  const lotV2 = window.M3_lotTam||0, areaVend = window.M3_areaVendible||0;
+  const nC = Math.max(0, num('pmldLotesC')), pvC = Math.max(0, num('pmldPvC'));
+  const nCr = Math.max(0, num('pmldLotesCr')), pvCr = Math.max(0, num('pmldPvCr'));
+  const qLot = Math.max(0, num('pmldCuota'));
+  const t0 = Math.min(1200, Math.max(0, Math.round(num('pmldMeses'))));
+  const primaPct = Math.min(100, Math.max(0, num('pmldPrima')));
+  const efContado = nC * lotV2 * pvC;                 // contado: cobrado al 100%
+  const valorLoteCr = lotV2 * pvCr;
+  const Vcr = nCr * valorLoteCr;                       // valor total de los contratos a crédito
+  const primaLote = valorLoteCr * primaPct/100;
+  const finLote = Math.max(0, valorLoteCr - primaLote);   // saldo financiado por lote (tras prima)
+  let cuotasCobradas=0, lotesPagando=0;
+  if(nCr>0 && t0>0 && qLot>0 && valorLoteCr>0){
+    const w = pesosVentaMes(t0, 'rampa');             // reparto ascendente de cuándo se vendió cada lote
+    for(let i=1;i<=t0;i++){ const lotesI = nCr*(w[i-1]||0); const age = t0 - i;   // meses que lleva pagando cuotas
+      const pagado = Math.min(qLot*age, finLote);
+      cuotasCobradas += lotesI*pagado;
+      if(pagado < finLote - 0.5) lotesPagando += lotesI;   // aún no termina de pagar → sigue aportando al mes
+    }
+  } else if(nCr>0){ lotesPagando = nCr; }             // sin meses transcurridos: solo prima cobrada, todos siguen debiendo
+  const primaCobrada = nCr*primaLote;
+  const cobradoCredito = primaCobrada + cuotasCobradas;
+  const restaCredito = Math.max(0, Vcr - cobradoCredito);
+  const C = efContado + cobradoCredito;               // lo que el dueño ya cobró (contado + crédito estimado)
+  const Av = (nC+nCr)*lotV2;
+  const p = areaVend>0 ? Math.min(100, Av/areaVend*100) : 0;
+  const m = qLot*lotesPagando;                        // entra al mes (solo el crédito que sigue pagando)
+  const k = m>0 ? Math.min(1200, restaCredito/m) : 0; // meses que restan por cobrar
+  return {p, C, T:restaCredito, m, k, Av, nC, nCr, efContado, Vcr, cobradoCredito, restaCredito, primaCobrada, cuotasCobradas, valorLoteCr, t0};
+}
+function pmLotesRender(){
+  const areaEl=$("pmldArea"); if(areaEl) areaEl.textContent = (window.M3_areaVendible>0)? (Math.round(window.M3_areaVendible).toLocaleString('es-HN')+' v²') : '— (llena el Módulo 3)';
+  const b=$("pmldBanner"); if(!b) return;
+  const lotV2=window.M3_lotTam||0;
+  if(lotV2<=0){ b.innerHTML=`<div class="note" style="margin:0">Define el <b>tamaño de lote</b> en el Módulo 3 para estimar por lotes.</div>`; return; }
+  const e=pmLotesEstimar();
+  if((e.nC+e.nCr)<=0){ b.innerHTML=`<div class="note" style="margin:0">Ingresa los lotes vendidos de contado y/o a crédito.</div>`; return; }
+  let rows='';
+  if(e.nC>0) rows+=`<div><b>Contado:</b> ${N1(e.nC)} lote(s) → <b style="color:var(--teal)">${L(e.efContado)}</b> cobrados al 100%.</div>`;
+  if(e.nCr>0){
+    rows+=`<div><b>Crédito:</b> ${N1(e.nCr)} lote(s) · valor ${L(e.Vcr)} → cobrado hasta hoy <b style="color:var(--teal)">${L(e.cobradoCredito)}</b>`;
+    rows+= (e.t0>0)? ` <span style="color:var(--faint)">(prima ${L(e.primaCobrada)} + cuotas ${L(e.cuotasCobradas)})</span>` : ` <span style="color:var(--faint)">(solo prima; aún sin meses transcurridos)</span>`;
+    rows+=`; resta <b>${L(e.restaCredito)}</b>.</div>`;
+  }
+  rows+=`<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--line-2)"><b>Total ya cobrado:</b> <b style="color:var(--teal)">${L(e.C)}</b> · <b>% vendido:</b> ${N1(e.p)}% · entra al mes ~${L(e.m)} por ~${N(e.k)} meses.</div>`;
+  b.innerHTML=`<div class="note ok" style="margin:0;line-height:1.55">${rows}</div>`;
+}
 function setPMVars(){
   window.PM_on = pmOn;
   if(!pmOn){
@@ -4909,15 +5144,24 @@ function setPMVars(){
     return;
   }
   const favorPct = num("pmFavorPct");
-  // cartera heredada: los datos enlazados se cuadran (soltando lo redundante viejo); de ahí salen % vendido, lo cobrado y el ritmo
-  const sol = pmCarteraSolveAuto();
-  window._pmCartera = sol;
-  const cv = sol.v;
-  const pVend      = Math.min(100, Math.max(0, cv.p||0));
-  const C          = Math.max(0, cv.C||0);
-  const heredCuota = Math.max(0, cv.m||0);
-  // tope 1200 (100 años): si el ritmo (entra al mes) va a medio teclear, k=resta/mensual puede dispararse; lo acotamos.
-  const heredMeses = Math.min(1200, Math.max(0, Math.round(cv.k||0)));
+  let pVend, C, heredCuota, heredMeses;
+  if(pmCarteraMode==='lotes'){
+    // por lotes: contado (exacto) + crédito (estimado) → % vendido, lo cobrado y el ritmo heredado
+    const e = pmLotesEstimar();
+    window._pmCartera = { v:{ p:e.p, Av:e.Av, C:e.C, T:e.T, m:e.m, k:e.k, n:e.nCr, Vc:e.efContado+e.Vcr }, isU:{}, conflicts:[], _lotes:e };
+    pVend = Math.min(100, Math.max(0, e.p)); C = Math.max(0, e.C);
+    heredCuota = Math.max(0, e.m); heredMeses = Math.min(1200, Math.max(0, Math.round(e.k)));
+  } else {
+    // cartera heredada: los datos enlazados se cuadran (soltando lo redundante viejo); de ahí salen % vendido, lo cobrado y el ritmo
+    const sol = pmCarteraSolveAuto();
+    window._pmCartera = sol;
+    const cv = sol.v;
+    pVend      = Math.min(100, Math.max(0, cv.p||0));
+    C          = Math.max(0, cv.C||0);
+    heredCuota = Math.max(0, cv.m||0);
+    // tope 1200 (100 años): si el ritmo (entra al mes) va a medio teclear, k=resta/mensual puede dispararse; lo acotamos.
+    heredMeses = Math.min(1200, Math.max(0, Math.round(cv.k||0)));
+  }
   let yaHecho=0;
   let totDesa=0; if(Array.isArray(desarrollo)) totDesa=desarrollo.reduce((a,d)=>a+desaEfectivo(d),0);
   if(pmDesaMode==='total'){
@@ -4957,11 +5201,16 @@ function renderPMDisplay(){
   if($("pmWrap")) $("pmWrap").style.display = pmOn?'block':'none';
   // sincroniza los switches con su variable (una sola fuente de verdad; sirve también al cargar un escenario)
   { const esc = pmCarteraMode==='escenario';
+    const lotes = pmCarteraMode==='lotes';
     if($("segCarEsc")) $("segCarEsc").classList.toggle("on", esc);
-    if($("segCarReal")) $("segCarReal").classList.toggle("on", !esc);
+    if($("segCarReal")) $("segCarReal").classList.toggle("on", pmCarteraMode==='real');
+    if($("segCarLotes")) $("segCarLotes").classList.toggle("on", lotes);
+    if($("pmCarteraFields")) $("pmCarteraFields").style.display = lotes?'none':'';
+    if($("pmLotesWrap")) $("pmLotesWrap").style.display = lotes?'':'none';
+    if($("pmcIntro")) $("pmcIntro").style.display = lotes?'none':'';
     document.querySelectorAll('#pmWrap .pmc-deriv').forEach(el=>{ el.style.display = esc?'':'none'; });
     const intro=$("pmcIntro");   // se fija aquí (antes de pmCarteraRender, que repuebla pmcArea)
-    if(intro){ const want = esc
+    if(intro && !lotes){ const want = esc
         ? 'Ingrese los datos disponibles; los demás se <b style="color:var(--teal)">autocompletan</b> (en teal). Al escribir sobre un valor autocompletado, ese valor queda fijado; se advierte si algún dato es inconsistente. Área vendible = <b id="pmcArea">—</b>.'
         : 'Pon lo <b>real</b> que usa la proyección: <b>% vendido</b>, <b>n° de clientes</b>, <b>lo cobrado</b> y el <b>ritmo</b> — con la <b style="color:var(--teal)">cuota promedio</b> por cliente se calcula automáticamente lo que entra al mes. Área vendible = <b id="pmcArea">—</b>.';
       if(intro.dataset.mode!==pmCarteraMode){ intro.innerHTML=want; intro.dataset.mode=pmCarteraMode; } }
@@ -4979,6 +5228,7 @@ function renderPMDisplay(){
   if($("pmNeto")) $("pmNeto").textContent=L(neto);
   const yaHecho=window.PM_desaYaHecho||0;
   if(typeof pmCarteraRender==='function') pmCarteraRender();
+  if(typeof pmLotesRender==='function') pmLotesRender();
   const _cv=(window._pmCartera||{v:{}}).v||{};
   const hered=window.PM_heredCuota||0, hm=window.PM_heredMeses||0, restaT=_cv.T||0;
   let totDesa=0; if(Array.isArray(desarrollo)) totDesa=desarrollo.reduce((a,d)=>a+desaEfectivo(d),0);
@@ -5030,6 +5280,7 @@ function gatherState(){
     proyAhorro:num("proyAhorro"), duenoPctOv, ahorroPctOv, desPctBase, desPctOv,
     // módulo extra: proyecto en marcha
     pmOn, pmFavorPct:num("pmFavorPct"), pmc:pmcGather(),
+    pmld:{lotesC:num('pmldLotesC'),pvC:num('pmldPvC'),lotesCr:num('pmldLotesCr'),pvCr:num('pmldPvCr'),cuota:num('pmldCuota'),meses:num('pmldMeses'),prima:num('pmldPrima')},
     pmCarteraMode, pmDesaMode, pmDesaTotalReal:num("pmDesaTotalReal"),
     pmDesaPct:pmDesaPct.slice() };
 }
@@ -5158,7 +5409,7 @@ function applyState(d){
       renderPlanes();
     }
     // módulo 5 (costos recurrentes)
-    if(Array.isArray(d.salarios)){ salarios=d.salarios.map(s=>({nombre:s.nombre||"", sueldo:s.sueldo||0, viaticos:s.viaticos||0, inicioMes:Math.max(1,Math.round(s.inicioMes||1)), socio:Number.isInteger(s.socio)?s.socio:-1})); renderSalarios(); }
+    if(Array.isArray(d.salarios)){ salarios=d.salarios.map(s=>({nombre:s.nombre||"", sueldo:s.sueldo||0, viaticos:s.viaticos||0, inicioMes:Math.max(1,Math.round(s.inicioMes||1))})); renderSalarios(); }
     cargasCfg = _mergeCargas(d.cargasCfg);   // versiones viejas (salPatronal %) → cargas apagadas con tasas sugeridas
     renderCargas();
     if(d.salMeses!=null && $("salMeses")) $("salMeses").value=d.salMeses;
@@ -5213,7 +5464,9 @@ function applyState(d){
       }
     }
     pmDesaPct = Array.isArray(d.pmDesaPct) ? d.pmDesaPct.slice() : [];
-    pmCarteraMode = (d.pmCarteraMode==='real') ? 'real' : 'escenario';
+    pmCarteraMode = (d.pmCarteraMode==='real') ? 'real' : ((d.pmCarteraMode==='lotes') ? 'lotes' : 'escenario');
+    { const lp=d.pmld; const setl=(id,v)=>{ if($(id)) $(id).value=(v==null||v===0?'':v); };
+      if(lp && typeof lp==='object'){ setl('pmldLotesC',lp.lotesC); setl('pmldPvC',lp.pvC); setl('pmldLotesCr',lp.lotesCr); setl('pmldPvCr',lp.pvCr); setl('pmldCuota',lp.cuota); setl('pmldMeses',lp.meses); setl('pmldPrima',lp.prima); } }
     pmDesaMode = (d.pmDesaMode==='total') ? 'total' : 'rubro';
     if($("pmDesaTotalReal")) $("pmDesaTotalReal").value = (d.pmDesaTotalReal==null?'':d.pmDesaTotalReal);
     if(typeof setPMVars==='function') setPMVars();
@@ -5221,6 +5474,9 @@ function applyState(d){
     if(d.unidadTerr) setUnidad(d.unidadTerr);
     if(d.precioMode) setPrecioMode(d.precioMode);
     if(d.pagoDuenoMode) setPagoDuenoMode(d.pagoDuenoMode);
+    // refresco explícito de Lotificación: garantiza que el modo (%/plano) y sus campos se rerindericen aunque
+    // el escenario venga de una versión antigua sin 'unidadTerr' (así el modo "Con plano" nunca queda en blanco tras cargar/duplicar).
+    if(typeof calcTerreno==='function') calcTerreno(); else if(typeof calcLotes==='function') calcLotes();
     renderSoc(); calc();
     if(typeof setPMVars==='function'){ setPMVars(); if(pmOn && typeof calcProyeccion==='function') calcProyeccion(); }
     if(typeof renderPMDesa==='function') renderPMDesa();
