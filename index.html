@@ -4292,10 +4292,8 @@ function renderResumenProy(M){
         <span style="font-size:12px;color:var(--muted)">El dueño ya cobró <b style="color:var(--ink);font-family:var(--mono)">${L(pmCobradoDueno)}</b></span>
         <span style="font-size:12px;color:var(--muted)">A favor del comprador: <b style="color:var(--teal)">${N1(pmFavorPct)}%</b> = <b style="color:var(--teal);font-family:var(--mono)">${L(pmFavorComprador)}</b> <span style="color:var(--faint)">(reduce tu costo de compra)</span></span></div>`
     : '';
-  // resultado por socio (un valor representativo, sin nombres): utilidad por socio + salario/viáticos de socios en planilla
-  const gxs = nSoc>0 ? gananciaSocios/nSoc : gananciaSocios;
-  const _smG = (typeof salarioMensualPorSocio==='function') ? salarioMensualPorSocio() : {mens:[]};
-  const salSocMes = (_smG.mens||[]).reduce((a,b)=>a+(b||0),0);   // salario + viáticos mensual que suman los socios en planilla
+  // salario/viáticos mensual por socio (para la sección "Ganancias de socios" del resumen normal)
+  const _smG = (typeof salarioMensualPorSocio==='function') ? salarioMensualPorSocio() : {mens:[],desde:[]};
 
   let h=`<div class="rp-doc">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap">
@@ -4306,7 +4304,7 @@ function renderResumenProy(M){
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700">Ganancia del proyecto</div>
         <div style="font-size:31px;font-weight:800;font-family:var(--mono);color:${neg?'var(--clay)':'var(--teal)'};line-height:1">${L(utilidad)}</div>
         <div style="font-size:11px;color:var(--muted)">margen ${N1(margen)}% <span style="color:var(--faint)">(ganancia ÷ ventas)</span></div>
-        ${!DET?`<div style="font-size:11px;color:var(--muted);margin-top:5px">deriva en <b style="color:var(--purple)">ahorro ${L(reserva)}</b> <span style="color:var(--faint)">para reinversión</span></div>`:''}
+        ${!DET?`<div style="font-size:11px;color:var(--muted);margin-top:5px">deriva en <b style="color:var(--purple)">reserva de reinversión ${L(reserva)}</b></div>`:''}
       </div>
     </div>
     <div class="rp-hero">${ DET
@@ -4401,7 +4399,7 @@ function renderResumenProy(M){
     // ◆ Salario y beneficios (nivel de proyecto)
     h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Salario y beneficios</span></div>
       <div class="rp-row">${item('Salario mensual (planilla)', L(salarioMensual))}${item('Aguinaldos (13.º y 14.º)', aguinaldosOn?`${L(sueldosMes*2)}/año`:'no aplican')}${item('Viáticos', viaticosMes>0?`${L(viaticosMes)}/mes`:'—')}${item('Prestaciones de socios', segTotSoc>0.5?L(segTotSoc):'—')}</div>
-      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">Costo total de planilla en el proyecto: <b>${L(T.sal||0)}</b>${segTotSoc>0.5?` · prestaciones (seguro médico + RAP voluntario): <b>${L(segTotSoc)}</b>, beneficio de los socios`:''}. Para atribuir un sueldo a un socio, escribe en <b>Costos → Salarios</b> el mismo nombre del socio; así se le suma en sus ganancias arriba.</div></section>`;
+      <div style="font-size:10px;color:var(--faint);margin-top:6px;line-height:1.5">Planilla total del proyecto: <b>${L(T.sal||0)}</b>${segTotSoc>0.5?` · prestaciones (seguro médico + RAP voluntario): <b>${L(segTotSoc)}</b>, beneficio de los socios`:''}. Para atribuir un sueldo a un socio, escribe en <b>Costos → Salarios</b> el mismo nombre del socio; así se le suma en sus ganancias arriba.</div></section>`;
 
     // ◆ Gráficas
     h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Ganancias por año y acumulado</span></div>
@@ -4513,8 +4511,8 @@ function pintarComparativa(cols){
     ['Margen',                  x=>N1(x.margen)+'%',           true,  'max', x=>x.margen],
     // ganancia individual: lo que recibe un socio de ganancias y en cuántos años
     ['Ganancia por socio',      x=>`${L(x.gxs)} <span style="color:var(--faint);font-weight:400">· ~${x.dur} ${x.dur===1?'año':'años'}</span>`, true, 'max', x=>x.gxs],
-    // ahorro (reinversión): monto acumulado y el % de ahorro consignado
-    ['Ahorro (reinversión)',    x=>`${L(x.reserva)} <span style="color:var(--faint);font-weight:400">· ${N1(x.ahorroPct||0)}%</span>`, true, 'max', x=>x.reserva],
+    // reserva de reinversión: monto acumulado y el % de ahorro consignado
+    ['Reserva de reinversión',  x=>`${L(x.reserva)} <span style="color:var(--faint);font-weight:400">· ahorro ${N1(x.ahorroPct||0)}%</span>`, true, 'max', x=>x.reserva],
     ['Inversión inicial',       x=>L(x.inversion),             true,  'min', x=>x.inversion],
     // proyecto en marcha: % de lo ya vendido que el dueño cede a favor del comprador (reduce el costo de compra)
     ...(hayPMFavor ? [
