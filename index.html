@@ -4388,14 +4388,17 @@ function renderResumenProy(M){
     if(devSocios>0.5) invParts.push(`se les devuelve <b style="color:var(--ink)">${L(devSocios)}</b>${hit.socios>0?` <span style="color:var(--faint)">(${anioTxt(hit.socios)})</span>`:''}`);
     h+=`<div style="margin-top:11px;font-size:12px;color:var(--muted);line-height:1.7"><div>${rotulo('Inversión inicial')} &nbsp;${invParts.join(' · ')}</div></div>`;
     h += pmNego;   // ajuste por ventas previas a la compra (cronológicamente, al adquirir)
-    // ===== PARA LOS SOCIOS · lo esencial en 3 números macro: retorno, cuánto multiplica cada lempira, y cuándo recuperan su aporte =====
+    // ===== PARA LOS SOCIOS · lo esencial: retorno %, multiplicador, tiempo de retorno (payback) y ahorro para reinversión =====
     {
-      const _roi=retorno, _mult=invTotal>0?(invTotal+utilidad)/invTotal:0, _pb=(hit.socios>0)?Math.ceil(hit.socios/12):0;
+      const _roi=retorno, _mult=invTotal>0?(invTotal+utilidad)/invTotal:0, _reserva=M.reservaFinal||0;
+      // payback: primer año en que lo recibido (capital devuelto + ganancia repartida) iguala la inversión inicial
+      let _cum=0,_pb=0; (M.anual||[]).forEach(a=>{ _cum+=(a.soc||0)+(a.ganancia||0); if(_pb===0 && invTotal>0 && _cum>=invTotal) _pb=a.y; });
       h+=`<div style="margin-top:13px"><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;margin-bottom:2px">Para los socios · lo esencial</div>
         <div class="rp-hero" style="margin-top:8px">
           ${kpi('Retorno sobre la inversión', `${Math.round(_roi)}%`, 'var(--teal)', 'la ganancia frente a lo que se invirtió')}
           ${kpi('Cada L1 aportado devuelve', `L ${_mult.toFixed(2)}`, 'var(--ink)', 'tu aporte de vuelta más la ganancia')}
-          ${_pb>0?kpi('Recuperas tu aporte', `Año ${_pb}`, 'var(--ink)', 'cuándo se devuelve el capital a socios'):''}
+          ${kpi('Tiempo de retorno de inversión', _pb>0?`Año ${_pb}`:'—', 'var(--ink)', 'cuando lo recibido (capital + ganancia) iguala lo invertido')}
+          ${_reserva>0.5?kpi('Ahorro para reinversión', L(_reserva), 'var(--purple)', 'reserva que queda para el próximo proyecto'):''}
         </div></div>`;
     }
     // ===== GANANCIAS DE SOCIOS (lo más relevante): utilidad (el margen verde de la gráfica), en cuántos años,
