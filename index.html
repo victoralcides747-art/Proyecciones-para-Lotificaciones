@@ -4215,19 +4215,25 @@ function svgIngresoSociosPorAnio(M){
   const totY=years.map((_,i)=>(ganY[i]||0)+(salY[i]||0));
   if(totY.reduce((a,b)=>a+b,0)<=0.5) return `<div style="font-size:11px;color:var(--faint)">Aún no hay ganancias ni salarios de socios para graficar.</div>`;
   const maxY=Math.max(1,...totY);
-  const W=640,H=232, pl=54,pr=14,pt=12,pb=26, iw=W-pl-pr, ih=H-pt-pb, n=years.length;
-  const bw=Math.max(6,Math.min(46, iw/n*0.62)); const xC=i=> pl+iw*(i+0.5)/n; const yV=v=> pt+ih*(1-v/maxY);
+  const ab=v=>{ v=Math.round(v||0); if(v>=1e6) return (v/1e6).toFixed(v>=1e7?0:1)+'M'; if(v>=1e3) return Math.round(v/1e3)+'k'; return ''+v; };
+  const W=680,H=272, pl=50,pr=12,pt=24,pb=26, iw=W-pl-pr, ih=H-pt-pb, n=years.length;
+  const bw=Math.max(8,Math.min(48, iw/n*0.66)); const xC=i=> pl+iw*(i+0.5)/n; const yV=v=> pt+ih*(1-v/maxY);
   const GAN='#0E7C66', SAL='#B4541F';   // mismos dos colores que usan las otras gráficas (verde ganancia / naranja)
   let grid=''; for(let g=0; g<=4; g++){ const v=maxY*g/4, y=yV(v); grid+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="var(--line-2)" stroke-width="1"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--faint)">${_Lc(v)}</text>`; }
-  let bars=''; years.forEach((y,i)=>{ const x=xC(i)-bw/2; let acc=0;
+  let bars='', tops='';
+  years.forEach((y,i)=>{ const x=xC(i)-bw/2; let acc=0;
     [[ganY[i],GAN,'Ganancia repartida'],[salY[i],SAL,'Salario de socios']].forEach(([v,col,lab])=>{ if(v<=0.5) return; const h0=ih*v/maxY; const yy=pt+ih-acc-h0; acc+=h0;
-      bars+=`<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5,h0-2).toFixed(1)}" rx="2" fill="${col}" opacity="0.92"><title>${lab} · Año ${y}: ${L(v)}</title></rect>`; }); });
+      bars+=`<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5,h0-2).toFixed(1)}" rx="2" fill="${col}" opacity="0.94"><title>${lab} · Año ${y}: ${L(v)}</title></rect>`;
+      if(h0>=15 && bw>=20) bars+=`<text x="${xC(i).toFixed(1)}" y="${(yy+h0/2+3).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="600" fill="#fff">${ab(v)}</text>`;   // parcial dentro del segmento
+    });
+    if(totY[i]>maxY*0.03){ tops+=`<text x="${xC(i).toFixed(1)}" y="${(pt+ih-acc-4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--ink)">${ab(totY[i])}</text>`; }   // total arriba de la barra
+  });
   let xlab=''; years.forEach((y,i)=> xlab+=`<text x="${xC(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${y}</text>`);
   const leg=`<div style="display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:8px;font-size:10.5px;color:var(--muted)">`+
     `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${GAN};display:inline-block"></span>Ganancia repartida a socios</span>`+
     `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${SAL};display:inline-block"></span>Salario de socios (con aguinaldos)</span></div>`;
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block" font-family="var(--sans)">${grid}${bars}${xlab}</svg>
-    <div style="font-size:10px;color:var(--faint);margin-top:4px">Lo que recibe la sociedad cada año: ganancia repartida + salario de los socios en planilla. En Lempiras.</div>${leg}`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block" font-family="var(--sans)">${grid}${bars}${tops}${xlab}</svg>
+    <div style="font-size:10px;color:var(--faint);margin-top:4px">Cada barra = lo que recibe la sociedad ese año. <b style="color:var(--muted)">Número de arriba</b>: total del año. <b style="color:var(--muted)">Dentro</b>: la parte de ganancia (verde) y de salario (naranja). Cifras en Lempiras (M = millones, k = miles); pasa el cursor para el monto exacto.</div>${leg}`;
 }
 // por socio: salario mensual (suma de sus líneas de planilla enlazadas) y el mes en que empieza a recibirlo
 function salarioMensualPorSocio(){
@@ -4374,6 +4380,16 @@ function renderResumenProy(M){
     if(devSocios>0.5) invParts.push(`se les devuelve <b style="color:var(--ink)">${L(devSocios)}</b>${hit.socios>0?` <span style="color:var(--faint)">(${anioTxt(hit.socios)})</span>`:''}`);
     h+=`<div style="margin-top:11px;font-size:12px;color:var(--muted);line-height:1.7"><div>${rotulo('Inversión inicial')} &nbsp;${invParts.join(' · ')}</div></div>`;
     h += pmNego;   // ajuste por ventas previas a la compra (cronológicamente, al adquirir)
+    // ===== PARA LOS SOCIOS · lo esencial en 3 números macro: retorno, cuánto multiplica cada lempira, y cuándo recuperan su aporte =====
+    {
+      const _roi=retorno, _mult=invTotal>0?(invTotal+utilidad)/invTotal:0, _pb=(hit.socios>0)?Math.ceil(hit.socios/12):0;
+      h+=`<div style="margin-top:13px"><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;margin-bottom:2px">Para los socios · lo esencial</div>
+        <div class="rp-hero" style="margin-top:8px">
+          ${kpi('Retorno sobre la inversión', `${Math.round(_roi)}%`, 'var(--teal)', 'la ganancia frente a lo que se invirtió')}
+          ${kpi('Cada L1 aportado devuelve', `L ${_mult.toFixed(2)}`, 'var(--ink)', 'tu aporte de vuelta más la ganancia')}
+          ${_pb>0?kpi('Recuperas tu aporte', `Año ${_pb}`, 'var(--ink)', 'cuándo se devuelve el capital a socios'):''}
+        </div></div>`;
+    }
     // ===== GANANCIAS DE SOCIOS (lo más relevante): utilidad (el margen verde de la gráfica), en cuántos años,
     //       y el salario mensual + su periodo. Si TODOS los socios ganan lo mismo, NO se enumeran: se muestra
     //       un solo valor (se entiende que es lo que gana cada uno). Solo se listan uno por uno si difieren. =====
@@ -4499,8 +4515,16 @@ function renderResumenProy(M){
           <div style="margin-top:7px">${rotulo(`Ventas por año · ${_org?'orgánicas (arranque lento, acelera al centro, se estabiliza)':'ritmo parejo (mismo nº de lotes cada mes)'}`)}<br>${_ventasTxt||'—'} <span style="color:var(--faint)">lotes vendidos</span></div>
         </div></section>`;
     }
-    h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Tiempo</span></div>
-      <div class="rp-tl">${tl('Duración total', `${dur} años`)}${tl('Terreno pagado', anioTxt(hit.dueno))}${tl('Desarrollo completo', anioTxt(hit.desa))}${tl('Primera ganancia', anioTxt(hit.ganancia))}${prest>0?tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no terminan'):''}</div></section>`;
+    { // fases del proyecto: cuánto tiempo se vende vs cuánto tiempo solo se cobran las cuotas a plazo
+      const _mv=Math.round(window.M4_mesesVenta||0), _H=Math.max(1,M.H||1); const _av=Math.max(1,Math.ceil(_mv/12));
+      const _vf=Math.max(0.08,Math.min(1,_mv/_H)), _cf=1-_vf; const _cobros=_cf>0.02;
+      const _fase1=`<div style="flex:${_vf.toFixed(3)};min-width:0;background:var(--teal);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 11px"><span style="font-weight:700">Ventas activas</span><span style="opacity:.85;font-size:9.5px">años 1–${_av} · se venden lotes</span></div>`;
+      const _fase2=_cobros?`<div style="flex:${_cf.toFixed(3)};min-width:0;background:#2E7DA8;color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 11px"><span style="font-weight:700">Solo cobros</span><span style="opacity:.85;font-size:9.5px">años ${_av+1}–${dur} · ya no se vende, se cobran cuotas</span></div>`:'';
+      h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Tiempo · venta vs. cobro</span></div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0 7px">De los <b>${dur} años</b> del proyecto, <b style="color:var(--teal)">${_av}</b> son de venta activa;${_cobros?` los <b style="color:#2E7DA8">${dur-_av}</b> restantes solo se cobran las cuotas de los planes a plazo (el largo plazo se termina de pagar hasta el año ${dur}).`:` todo se cobra al momento de vender.`}</div>
+        <div style="display:flex;height:40px;border-radius:9px;overflow:hidden;border:1px solid var(--line-2);font-size:11px;line-height:1.1;margin-bottom:12px">${_fase1}${_fase2}</div>
+        <div class="rp-tl">${tl('Duración total', `${dur} años`)}${tl('Terreno pagado', anioTxt(hit.dueno))}${tl('Desarrollo completo', anioTxt(hit.desa))}${tl('Primera ganancia', anioTxt(hit.ganancia))}${prest>0?tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no terminan'):''}</div></section>`;
+    }
   } else {
     h += pmNego;   // ajuste por ventas previas a la compra (detallado)
     // ===== DETALLADO: el desglose completo =====
