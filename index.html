@@ -1658,6 +1658,13 @@ function calc(){
   window.M1_participaciones   = parts.slice();            // % de utilidades por socio (suma 100)
   window.M1_nombresSocios     = socios.map(s=>s.nombre);  // nombres, en el mismo orden que las participaciones
   window.M1_prestamos         = prestamos.map(p=>({nombre:p.nombre||'Préstamo', monto:p.monto||0, tasaAnual:p.tasaAnual||0, plazoMeses:Math.round(p.plazoMeses||0), modo:'fija'}));   // préstamos de la sociedad
+  // reajuste por intereses (modo sociedad): el proyecto le devuelve a cada socio aporte×factor; el extra sobre su aporte
+  // es el interés reconocido. En los socios SIN préstamo es dinero que reciben por igualar el pago del que sí lo sacó.
+  window.M1_devuelveSocio     = devuelveSocio.slice();                                       // por socio: capital + interés reconocido
+  window.M1_reajusteSocio     = socios.map((s,i)=> Math.max(0,(devuelveSocio[i]||0)-(s.aporte||0)));   // reajuste (interés reconocido) por socio
+  window.M1_socioPrestamo     = socios.map(s=> !!s.prestamo);                                // ¿financió su aporte con préstamo?
+  window.M1_prestamistas      = socios.filter(s=>s.prestamo && s.aporte>0).map(s=>s.nombre); // nombres de quienes tomaron préstamo
+  window.M1_interesBancoSocio = socios.map(s=> interesBanco(s));                              // interés que cada socio paga a SU banco
 
   if(typeof calcTerreno==='function') calcTerreno();   // el terreno depende del capital disponible
   cloudSave();
@@ -4104,6 +4111,9 @@ function proyToggleAnio(y){ _proyExpandido[y]=!_proyExpandido[y]; if(_proyModel)
 /* ============ RESUMEN DE PROYECCIÓN (ejecutivo · macro · exportable a PDF) ============ */
 // nivel de detalle del Resumen (vista, no es dato del proyecto)
 let resumenDetalle='normal';
+// ¿desplegar el detalle por socio de "Ganancias de socios" cuando son parejos pero difieren solo por préstamo?
+let _ganSocExp=false;
+function toggleGanSoc(){ _ganSocExp=!_ganSocExp; if(typeof _proyModel!=='undefined'&&_proyModel) renderResumenProy(_proyModel); }
 function setResumenDetalle(m){
   resumenDetalle=(m==='detallado')?'detallado':'normal';
   if($("segResNormal")) $("segResNormal").classList.toggle('on', resumenDetalle==='normal');
@@ -4181,6 +4191,44 @@ function svgVentasPorAnio(M){
     <div style="display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;font-size:10.5px;color:var(--muted)"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0E7C66;display:inline-block"></span>Lotes nuevos por año (izq.)</span><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:14px;height:0;border-top:2px solid #B4541F;display:inline-block"></span>Acumulado (der.)</span></div>${preNota}`;
 }
 
+// salario de socios (enlazado por nombre) repartido POR AÑO, con la misma línea de tiempo del motor (incluye aguinaldos)
+function salarioSociosPorAnio(nAnios){
+  const noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
+  const per=new Array(Math.max(1,nAnios||1)).fill(0);
+  const planilla=window.M5_planilla||[]; const pm=Math.round(window.M5_planillaMeses||0); const agu=!!window.M5_aguinaldos;
+  const sal=(typeof salarios!=='undefined'&&Array.isArray(salarios))?salarios:[];
+  planilla.forEach((p,i)=>{ const si=(sal[i]!=null)?socioDeLinea(sal[i].nombre):-1; if(si<0||si>=nSoc) return;
+    for(let m=Math.max(1,p.inicioMes||1); m<=pm; m++){ const y=Math.ceil(m/12); if(y<1||y>per.length) continue; const cm=((m-1)%12)+1;
+      per[y-1]+=(p.sueldo||0)+(p.viaticos||0);
+      if(agu&&cm===12) per[y-1]+=(p.sueldo||0);
+      if(agu&&cm===7)  per[y-1]+=(p.sueldo||0);
+    }
+  });
+  return per;
+}
+// GRÁFICA (resumen corto) — lo que reciben los socios cada año: ganancia repartida + salario de socios (barras apiladas)
+function svgIngresoSociosPorAnio(M){
+  const anual=(M&&M.anual)||[]; const years=anual.map(a=>a.y);
+  if(!years.length) return `<div style="font-size:11px;color:var(--faint)">Aún no hay datos para graficar.</div>`;
+  const ganY=anual.map(a=>Math.max(0,a.ganancia||0));
+  const salY=salarioSociosPorAnio(years.length);
+  const totY=years.map((_,i)=>(ganY[i]||0)+(salY[i]||0));
+  if(totY.reduce((a,b)=>a+b,0)<=0.5) return `<div style="font-size:11px;color:var(--faint)">Aún no hay ganancias ni salarios de socios para graficar.</div>`;
+  const maxY=Math.max(1,...totY);
+  const W=640,H=232, pl=54,pr=14,pt=12,pb=26, iw=W-pl-pr, ih=H-pt-pb, n=years.length;
+  const bw=Math.max(6,Math.min(46, iw/n*0.62)); const xC=i=> pl+iw*(i+0.5)/n; const yV=v=> pt+ih*(1-v/maxY);
+  const GAN='#0E7C66', SAL='#B4541F';   // mismos dos colores que usan las otras gráficas (verde ganancia / naranja)
+  let grid=''; for(let g=0; g<=4; g++){ const v=maxY*g/4, y=yV(v); grid+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="var(--line-2)" stroke-width="1"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--faint)">${_Lc(v)}</text>`; }
+  let bars=''; years.forEach((y,i)=>{ const x=xC(i)-bw/2; let acc=0;
+    [[ganY[i],GAN,'Ganancia repartida'],[salY[i],SAL,'Salario de socios']].forEach(([v,col,lab])=>{ if(v<=0.5) return; const h0=ih*v/maxY; const yy=pt+ih-acc-h0; acc+=h0;
+      bars+=`<rect x="${x.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5,h0-2).toFixed(1)}" rx="2" fill="${col}" opacity="0.92"><title>${lab} · Año ${y}: ${L(v)}</title></rect>`; }); });
+  let xlab=''; years.forEach((y,i)=> xlab+=`<text x="${xC(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${y}</text>`);
+  const leg=`<div style="display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:8px;font-size:10.5px;color:var(--muted)">`+
+    `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${GAN};display:inline-block"></span>Ganancia repartida a socios</span>`+
+    `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${SAL};display:inline-block"></span>Salario de socios (con aguinaldos)</span></div>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block" font-family="var(--sans)">${grid}${bars}${xlab}</svg>
+    <div style="font-size:10px;color:var(--faint);margin-top:4px">Lo que recibe la sociedad cada año: ganancia repartida + salario de los socios en planilla. En Lempiras.</div>${leg}`;
+}
 // por socio: salario mensual (suma de sus líneas de planilla enlazadas) y el mes en que empieza a recibirlo
 function salarioMensualPorSocio(){
   const noms=window.M1_nombresSocios||[]; const nSoc=noms.length;
@@ -4231,6 +4279,11 @@ function renderResumenProy(M){
   const benef=(typeof beneficiosPorSocio==='function')?beneficiosPorSocio():new Array(nSoc).fill(0);
   const segTotSoc=T.seg||0, segPorSoc = nSoc>0 ? segTotSoc/nSoc : 0;   // prestaciones (seguro médico + RAP) por socio, partes iguales
   const gananciaInd=parts.map(p=>gananciaSocios*p/100);
+  // reajuste por intereses por socio (interés que el proyecto reconoce sobre su capital; en modo sociedad los que NO
+  // tienen préstamo reciben un extra por igualar el pago del que sí lo sacó). No es utilidad, es redistribución.
+  const reajusteArr=(window.M1_reajusteSocio&&window.M1_reajusteSocio.length===nSoc)?window.M1_reajusteSocio.slice():new Array(nSoc).fill(0);
+  const socioPrest=(window.M1_socioPrestamo&&window.M1_socioPrestamo.length===nSoc)?window.M1_socioPrestamo:new Array(nSoc).fill(false);
+  const prestamistasTxt=(Array.isArray(window.M1_prestamistas)&&window.M1_prestamistas.length)?` de ${window.M1_prestamistas.join(' y ')}`:'';
   const planillaArr=window.M5_planilla||[];
   const sueldosMes=planillaArr.reduce((a,p)=>a+(p.sueldo||0),0);
   const viaticosMes=planillaArr.reduce((a,p)=>a+(p.viaticos||0),0);
@@ -4331,44 +4384,120 @@ function renderResumenProy(M){
       const utilArr=noms.map((_,i)=>gananciaInd[i]||0);
       const mensArr=noms.map((_,i)=>smMens[i]||0);
       const desdeArr=noms.map((_,i)=>Math.max(1,Math.round(smDesde[i]||1)));
-      const salLineaTxt=(mensual,desdeM,porSocio)=>{
-        if(!(mensual>0.5 && planMeses>0)) return '';
-        const ini=Math.max(1,Math.round(desdeM||1)), finM=Math.max(ini,planMeses), nMeses=finM-ini+1, aniosSal=Math.round(nMeses/12*10)/10;
-        const periodo=`${ini===1?'desde el mes 1':'mes '+ini} al ${finM}${aniosSal>=1?` · ~${aniosSal} ${aniosSal===1?'año':'años'}`:` · ${nMeses} meses`}`;
-        return `<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Salario y viáticos <b style="color:var(--ink);font-family:var(--mono)">${L(mensual)}</b>/mes${porSocio?' por socio':''} <span style="color:var(--faint)">(${periodo})</span></div>`;
-      };
-      // ¿ganan todos lo mismo? (misma utilidad, mismo salario y, si hay salario, mismo periodo)
+      // Clasificación: ¿los "totales" (salario+utilidad) van parejos? ¿difieren SOLO por el préstamo de alguien?
       const eq=(a,b)=>Math.abs(a-b)<=Math.max(1,Math.abs(a)*0.005);
-      const todosIguales = noms.every((_,i)=> eq(utilArr[i],utilArr[0]) && eq(mensArr[i],mensArr[0]) && (mensArr[i]<=0.5 || desdeArr[i]===desdeArr[0]) );
-      let cuerpo, descr;
-      if(todosIguales){
-        // un solo valor, sin enumerar a cada socio
+      const parejosGanancia = noms.every((_,i)=> eq(utilArr[i],utilArr[0]) && eq(mensArr[i],mensArr[0]) && (mensArr[i]<=0.5 || desdeArr[i]===desdeArr[0]) );
+      const mismoPrestamo   = noms.every((_,i)=> eq(reajusteArr[i],reajusteArr[0]) && (!!socioPrest[i])===(!!socioPrest[0]) );
+      const fullyEqual = parejosGanancia && mismoPrestamo;              // idénticos → un solo valor (sin toggle)
+      const colapsable = parejosGanancia && !mismoPrestamo && nSoc>1;   // parejos en ganancia pero difieren por préstamo → colapsable
+      // ---- desglose por socio: salario + prestaciones + utilidad = total (con tiempos). Se usa igual en ambos casos. ----
+      const fila=(lab,val,det,fuerte)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:${fuerte?'6px 0 1px':'3px 0'};font-size:12px${fuerte?';border-top:1px solid #BFE0D7;margin-top:3px':''}">
+          <span style="color:${fuerte?'var(--ink);font-weight:700':'var(--muted)'}">${lab}${det?` <span style="color:var(--faint);font-weight:400;font-size:10.5px">${det}</span>`:''}</span>
+          <span style="font-family:var(--mono);font-weight:700;white-space:nowrap;color:${fuerte?'var(--teal)':'var(--ink)'};font-size:${fuerte?'13px':'12px'}">${L(val)}</span></div>`;
+      const salPeriodoDe=(i)=>{ if(!(mensArr[i]>0.5 && planMeses>0)) return '';
+        const ini=desdeArr[i], fin=Math.max(ini,planMeses), ny=Math.round((fin-ini+1)/12*10)/10;
+        return `${L(mensArr[i])}/mes · ${ny>=1?('~'+ny+' '+(ny===1?'año':'años')):((fin-ini+1)+' meses')}`; };
+      const desglose=(i,totLab)=>{
+        const salTot=benef[i]||0, presTot=segPorSoc||0, utilTot=utilArr[i]||0, totalSoc=salTot+presTot+utilTot;
+        let f='';
+        if(salTot>0.5) f+=fila('Salario y viáticos', salTot, salPeriodoDe(i), false);
+        if(presTot>0.5) f+=fila('Prestaciones (seguro/RAP)', presTot, '', false);
+        f+=fila('Utilidad', utilTot, `repartida en ~${dur} ${anioTxtG}`, false);
+        f+=fila(totLab, totalSoc, `en ~${dur} ${anioTxtG}`, true);
+        return f; };
+      const retMes=(M.hitos&&M.hitos.socios)||0, retAnioTxt=retMes>0?` (año ${Math.ceil(retMes/12)})`:'';
+      const intBancoArr=(window.M1_interesBancoSocio&&window.M1_interesBancoSocio.length===nSoc)?window.M1_interesBancoSocio:new Array(nSoc).fill(0);
+      // bloque "aparte de la ganancia": devolución de capital + reajuste por intereses (y, si tomó préstamo, su interés al banco)
+      const aparteBloque=(i)=>{
+        const cap=aportes[i]||0, raj=reajusteArr[i]||0, ib=intBancoArr[i]||0;
+        if(cap<=0.5 && raj<=0.5) return '';
+        const linea=(lab,val,det,col)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 0;font-size:11px;color:var(--muted)">
+            <span>${lab}${det?` <span style="color:var(--faint);font-size:10px">${det}</span>`:''}</span>
+            <span style="font-family:var(--mono);white-space:nowrap;color:${col||'var(--ink)'}">${val}</span></div>`;
+        let s=`<div style="margin-top:9px;padding-top:7px;border-top:1px dashed #CFE4DD">
+            <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:700;margin-bottom:2px">Aparte de la ganancia (no es utilidad)</div>`;
+        if(cap>0.5) s+=linea('Devolución de capital', L(cap), retAnioTxt.trim().replace(/^\(|\)$/g,''), 'var(--muted)');
+        if(raj>0.5) s+=linea('Reajuste por intereses', '+'+L(raj), socioPrest[i]?'el proyecto le reconoce el interés de su préstamo':`por igualar el interés del préstamo${prestamistasTxt} (aunque no tomó préstamo)`, 'var(--ink)');
+        if(socioPrest[i] && ib>0.5) s+=linea('Interés que paga a su banco', '−'+L(ib), 'su costo real del préstamo', 'var(--clay)');
+        s+=`</div>`;
+        return s;
+      };
+      // extra que reciben los que NO pagan intereses (reajuste de un socio sin préstamo)
+      let _noBIdx=-1; for(let i=0;i<nSoc;i++){ if(!socioPrest[i]){ _noBIdx=i; break; } }
+      const extraNoBorrow = _noBIdx>=0 ? (reajusteArr[_noBIdx]||0) : 0;
+      // vista detallada: cada socio con su propio desglose + aparte (se usa enumerando o al "desplegar")
+      const vistaEnumerada=()=> noms.map((nm,i)=>{
+          const col=SOCIO_COLS[i%SOCIO_COLS.length];
+          return `<div style="display:flex;gap:9px;padding:10px 0;border-top:1px solid #CFE4DD">
+            <span style="width:9px;height:9px;border-radius:2px;background:${col};flex:none;margin-top:5px"></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;color:var(--ink);font-size:12.5px;margin-bottom:2px">${(nm||('Socio '+(i+1)))} <span style="font-weight:400;color:var(--faint);font-size:10.5px">· ${N1(parts[i]||0)}% de participación</span></div>
+              ${desglose(i,'Total')}
+              ${aparteBloque(i)}
+            </div></div>`; }).join('');
+      // vista general (parejos): un solo desglose. conNotaExtra=true agrega la nota del extra por intereses (case colapsable)
+      const vistaGeneral=(conNotaExtra)=>{
         const partTxt = nSoc>1 ? `<span style="font-weight:400;color:var(--faint);font-size:10.5px"> · ${nSoc} socios · ${N1(parts[0]||0)}% c/u</span>` : '';
         const titulo = nSoc>1 ? `Todos los socios reciben lo mismo${partTxt}` : `El socio recibe`;
-        cuerpo = `<div style="padding:9px 0 2px">
-            <div style="font-weight:700;color:var(--ink);font-size:12.5px">${titulo}</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Utilidad <b style="color:var(--teal);font-family:var(--mono);font-size:14px">${L(utilArr[0])}</b> <span style="color:var(--faint)">${nSoc>1?'por socio, ':''}repartida en ~${dur} ${anioTxtG}</span></div>
-            ${salLineaTxt(mensArr[0],desdeArr[0],nSoc>1)}
+        let aparte;
+        if(conNotaExtra){
+          const repCap=aportes[0]||0;
+          aparte=`<div style="margin-top:9px;padding-top:7px;border-top:1px dashed #CFE4DD">
+              <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:700;margin-bottom:2px">Aparte de la ganancia (no es utilidad)</div>
+              ${repCap>0.5?`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:var(--muted);padding:2px 0"><span>Devolución de capital <span style="color:var(--faint);font-size:10px">${retAnioTxt.trim().replace(/^\(|\)$/g,'')}</span></span><span style="font-family:var(--mono)">${L(repCap)}</span></div>`:''}
+              ${extraNoBorrow>0.5?`<div style="font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.45">Los socios <b>sin préstamo</b> reciben además <b style="color:var(--teal)">+${L(extraNoBorrow)}</b> de <b>reajuste por intereses</b>${prestamistasTxt?` (por igualar el préstamo${prestamistasTxt})`:''}. Quien tomó el préstamo también lo recibe, pero cubre su interés (neto ≈ 0).</div>`:''}
+            </div>`;
+        } else { aparte=aparteBloque(0); }
+        return `<div style="padding:8px 0 2px">
+            <div style="font-weight:700;color:var(--ink);font-size:12.5px;margin-bottom:5px">${titulo}</div>
+            ${desglose(0,'Total por socio')}
+            ${aparte}
           </div>`;
-        descr = `La utilidad (el margen verde de la gráfica) que recibe cada socio${mensArr[0]>0.5?', y su salario mensual':''}.`;
+      };
+      const btnToggle=(txt)=>`<div style="margin-top:8px;text-align:center;border-top:1px dashed #CFE4DD;padding-top:8px"><button onclick="toggleGanSoc()" style="background:none;border:none;color:var(--teal);font-weight:700;font-size:11px;cursor:pointer;padding:2px 6px">${txt}</button></div>`;
+      let cuerpo, descr, toggle='';
+      if(fullyEqual){
+        cuerpo = vistaGeneral(false);
+        descr = `Lo que recibe cada socio, desglosado (la utilidad es el margen verde de la gráfica).`;
+      } else if(colapsable && !_ganSocExp){
+        // colapsado: el dato general (van parejos) + la nota del extra por intereses
+        cuerpo = vistaGeneral(true);
+        descr = `Todos reciben lo mismo; solo cambia el ajuste por el préstamo de un socio.`;
+        toggle = btnToggle('▾ Ver el detalle por socio');
       } else {
-        // difieren: se listan uno por uno
-        cuerpo = noms.map((nm,i)=>{
-          const col=SOCIO_COLS[i%SOCIO_COLS.length];
-          return `<div style="display:flex;gap:9px;padding:9px 0;border-top:1px solid #CFE4DD">
-            <span style="width:9px;height:9px;border-radius:2px;background:${col};flex:none;margin-top:4px"></span>
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;color:var(--ink);font-size:12.5px">${(nm||('Socio '+(i+1)))} <span style="font-weight:400;color:var(--faint);font-size:10.5px">· ${N1(parts[i]||0)}% de participación</span></div>
-              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Utilidad <b style="color:var(--teal);font-family:var(--mono);font-size:13px">${L(utilArr[i])}</b> <span style="color:var(--faint)">repartida en ~${dur} ${anioTxtG}</span></div>
-              ${salLineaTxt(mensArr[i],desdeArr[i],false)}
-            </div></div>`;
-        }).join('');
-        descr = `Lo que recibe cada socio: la utilidad (el margen verde de la gráfica) y, si está en planilla, su salario mensual y el periodo en que lo percibe.`;
+        // desplegado (o participaciones distintas): cada socio con su desglose
+        cuerpo = vistaEnumerada();
+        descr = `Lo que recibe cada socio, desglosado (salario + utilidad = total). La utilidad es el margen verde de la gráfica.`;
+        if(colapsable) toggle = btnToggle('▴ Ocultar el detalle (mostrar solo el total)');
       }
       h+=`<section class="rp-sec" style="margin-top:13px;background:var(--teal-soft);border:1px solid #BFE0D7;border-radius:11px;padding:12px 15px">
         <div class="rp-sec-h" style="border:none;margin:0 0 2px"><span class="rp-sec-n" style="background:var(--teal);color:#fff">$</span><span class="rp-sec-t" style="color:var(--teal)">Ganancias de socios</span></div>
         <div style="font-size:10.5px;color:var(--muted);margin:0 0 2px">${descr}</div>
-        ${cuerpo}</section>`;
+        ${cuerpo}${toggle}</section>`;
+    }
+    // comisiones por ventas "en juego" (el costo de vender la cartera completa)
+    if(com>0.5){
+      const _comBase=(window.M5_comisionModo==='pct')?`${N1(window.M5_comisionPct||0)}% de cada venta`:`${L(window.M5_comisionFijo||0)} por lote · ${N(window.M3_lotesCant||0)} lotes`;
+      h+=`<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 13px">
+        <span style="font-size:11.5px;color:var(--muted)"><b style="color:var(--ink)">Comisiones por ventas en juego</b> <span style="color:var(--faint)">· ${_comBase}</span></span>
+        <span style="font-family:var(--mono);font-weight:700;color:var(--clay);white-space:nowrap">${L(com)}</span></div>`;
+    }
+    // gráfica: lo que reciben los socios por año (ganancia repartida + salario)
+    h+=`<section class="rp-sec" style="margin-top:13px"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Ingreso a socios por año</span></div>
+      ${svgIngresoSociosPorAnio(M)}</section>`;
+    // supuestos: de qué dependen estos números — precio por vara de cada plan + ritmo de venta orgánico por año
+    {
+      const _pl=window.M4_planes||[];
+      const _precios=_pl.filter(p=>(p.pct||0)>0).map(p=>`${p.nombre||'Plan'} <b style="color:var(--ink);font-family:var(--mono)">${L(p.precioVara||0)}</b>/v² <span style="color:var(--faint)">(${N1(p.pct||0)}%${(!esContado(p)&&(p.plazoMeses||0)>0)?` · ${N(p.plazoMeses)}m`:' · contado'})</span>`).join(' · ');
+      const _wprice=_pl.reduce((s,p)=>s+(p.pct||0)/100*(p.precioVara||0),0);
+      const _org=(window.M4_flujoMode||ventaFlujoMode)==='rampa';
+      const _lotesAnio=(M.anual||[]).map(a=>a.lotesVend||0);
+      const _ventasTxt=_lotesAnio.map((v,i)=> v>0.05?`Año ${i+1}: <b style="color:var(--ink)">${N1(v)}</b>`:null).filter(Boolean).join(' · ');
+      h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Supuestos (de qué dependen estos resultados)</span></div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.65">
+          <div>${rotulo('Precio por vara, por plan')}<br>${_precios||'—'} <span style="color:var(--faint)">· promedio ponderado <b style="color:var(--ink);font-family:var(--mono)">${L(_wprice)}</b>/v²</span></div>
+          <div style="margin-top:7px">${rotulo(`Ventas por año · ${_org?'orgánicas (arranque lento, acelera al centro, se estabiliza)':'ritmo parejo (mismo nº de lotes cada mes)'}`)}<br>${_ventasTxt||'—'} <span style="color:var(--faint)">lotes vendidos</span></div>
+        </div></section>`;
     }
     h+=`<section class="rp-sec"><div class="rp-sec-h"><span class="rp-sec-n">◆</span><span class="rp-sec-t">Tiempo</span></div>
       <div class="rp-tl">${tl('Duración total', `${dur} años`)}${tl('Terreno pagado', anioTxt(hit.dueno))}${tl('Desarrollo completo', anioTxt(hit.desa))}${tl('Primera ganancia', anioTxt(hit.ganancia))}${prest>0?tl('Préstamos pagados', (hit.prestamos>0)?anioTxt(hit.prestamos):'no terminan'):''}</div></section>`;
